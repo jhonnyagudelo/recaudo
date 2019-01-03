@@ -1,0 +1,7 @@
+pg_dump -U postgres -v -F c coodetrans > C:\Users\jhonn\Desktop\Coodetrans\db\coodetrans_backup.dump
+
+pg_dump -U postgres -v -F c recaudo_marcada < C:\Users\jhonn\Desktop\Coodetrans\db\coodetrans_backup.dump
+
+
+
+ psql -U postgres -h localhost

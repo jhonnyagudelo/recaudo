@@ -1,0 +1,52 @@
+CREATE OR REPLACE FUNCTION precio_positivo(idcostoruta int,pasajero int, auxiliare int,positivo int,bloqueo int,velocida int,idruta int, beabruto int,idturno int, idtablavalor int)RETURNS void  as $$
+ DECLARE
+resultado int;
+ num_positivo int;
+ costo int;
+  porcentaje numeric;
+
+  BEGIN
+  INSERT INTO costo_ruta (id_costo_ruta,pasajeros,auxiliares,positivos,bloqueos,velocidad,id_ruta,bea_bruto,id_turno,id_tabla_valor)
+  VALUES( idcostoruta,pasajero,auxiliare,positivo,bloqueo,velocida,idruta,beabruto,idturno,idtablavalor);
+  RAISE NOTICE 'ingreso valores con exitos';
+
+  porcentaje:=(select valor_ruta FROM costo_ruta AS a1 INNER JOIN tabla_valor b1 ON a1.id_tabla_valor = id_valor WHERE id_costo_ruta =idcostoruta );
+
+  costo:=(SELECT b1.costo FROM costo_ruta AS a1 INNER JOIN tabla_valor b1 ON a1.id_tabla_valor = b1.id_Valor WHERE id_costo_ruta = idcostoruta);
+
+  num_positivo:=(SELECT positivos FROM costo_ruta WHERE id_costo_ruta = idcostoruta);
+
+  resultado:=(num_positivo * porcentaje) * costo;
+  RAISE NOTICE 'el resultado es %', resultado;
+  IF (num_positivo >=6) THEN
+  UPDATE costo_ruta SET costo_positivo = resultado WHERE id_costo_ruta= idcostoruta;
+   
+  ELSE
+ 
+ END IF;
+
+ UPDATE costo_ruta SET bea_bruto_total = (bea_bruto + resultado) where id_costo_ruta = idcostoruta;
+
+  END;
+  $$ LANGUAGE plpgsql VOLATILE;
+
+
+
+
+
+INSERT INTO ayuda_auxiliar(nombre_ruta,precio)('Costa rica', 5000), ('Candelaria',5000);
+ CREATE TABLE ayuda_auxiliar(
+ id_ayuda SERIAL PRIMERY KEY NOT NULL,
+ nombre_ruta varchar(50) not null,
+ precio int not null,
+ create_at TIMESTAMP NOT  NULL DEFAULT CURRENT_TIMESTAMP,
+ update_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);
+
+
+SELECT costo_ruta  (9,30, 0, 8, 4, 100, 90000, 1,4,4,2);
+
+
+select bea_bruto,bea_neto,positivos,costo_positivo,bea_neto_total from costo_ruta;
+ 
+
+SELECT precio FROM costo_ruta AS a1 INNER JOIN ayuda_auxiliar b1 ON ai.id_ayuda = b1.id_ayuda where id_costo = 19
