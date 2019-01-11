@@ -19,11 +19,6 @@ RAISE NOTICE 'El numero de turno es %', num_turno;
 RAISE NOTICE 'El en la ruta %', nombre_ruta;
 END;
 
-
-
-
-
-
 $$ LANGUAGE plpgsql VOLATILE;
 
 
@@ -31,74 +26,8 @@ $$ LANGUAGE plpgsql VOLATILE;
 
 
 SELECT hora_salida FROM rodamiento r JOIN turno t ON r.id_rodamiento = t.rodamiento WHERE t.id_turno = num_turno
-
-
-
-
-
 WITH ruta (id_ruta) AS (
-
       VALUES (4)
-
-    )
-
-    , reloj AS (
-
-      SELECT
-
-        rr_r.*
-
-      FROM ruta rr
-
-        INNER JOIN ruta r_v
-
-          ON r_v.id_ruta = rr.id_ruta
-
-        INNER JOIN ruta_reloj rr_r
-
-          ON rr_r.id_ruta = r_v.id_ruta
-
-        INNER JOIN reloj rr_v
-
-       ON rr_r.id_reloj = rr_v.id_reloj
-
-      WHERE TRUE
-
-    )
-
-    SELECT
-
-
-
-       ,horario_salida + ( rr.tiempo_max || 'minute')::INTERVAL
-
-    FROM reloj rr;
-
-
-
-
-
-
-
-
-
-
-CREATE OR REPLACE FUNCTION send_time(ruta int) RETURNS TABLE (turno INT,tiempo time) AS $$
-DECLARE
-horario_salida TIME;
-num_turno INT;
-BEGIN
-num_turno:=(SELECT MAX(id_turno) FROM turno);
-horario_salida:=( SELECT hora_salida FROM rodamiento r
-                     JOIN turno t ON r.id_rodamiento = t.id_turno
-                        WHERE t.id_turno = num_turno);
-
-RAISE NOTICE 'HORARIO DE SALIDA %',horario_salida;
-RAISE NOTICE 'NUMERO TURNO %',num_turno;
-
-RETURN query
-    WITH ruta (id_ruta) AS (
-      VALUES (ruta)
     )
     , reloj AS (
       SELECT
@@ -113,14 +42,16 @@ RETURN query
       WHERE TRUE
     )
     SELECT
-        num_turno
        ,horario_salida + ( rr.tiempo_max || 'minute')::INTERVAL
     FROM reloj rr;
-    END;
-$$ LANGUAGE plpgsql VOLATILE;
-  COST 100
-  ROW 1000;
-ALTER FUNCTION send_times() OWNER TO postgres;
+
+
+
+
+
+
+
+
 
 
 

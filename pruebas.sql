@@ -71,35 +71,6 @@ FROM turno t_r;
  INSERT INTO tiempo (id_turno) SELECT turno FROM turnitoo
 
 
-
-
-
-
-CREATE OR REPLACE FUNCTION list_route RETURN TABLE  AS $send_time$
-DECLARE
-	num_id INT;
-BEGIN
-num_id:=(SELECT MAX(id_turno) FROM id_turno);
-
-WITH  num_turno(turno) AS (
-  VALUES (1)),
-turno AS
-(SELECT t.*
-  ,t_r.turno
-  FROM num_turno t_r
-  INNER JOIN turno t ON t.id_turno = t_r.turno
-  INNER JOIN ruta r_t ON r_t.id_ruta = t.id_ruta
-  INNER JOIN ruta_reloj rr_r ON r_t.id_ruta = rr_r.id_ruta
-  WHERE TRUE)
-
-SELECT
-  t_r.turno
-FROM turno t_r;
-
-
-
-
-
 WITH RECURSIVE turno_tiempo(turno,ruta,hora_salida) AS (
     SELECT  t_t.turno, t_t.ruta,t_t.hora_salida
     FROM prueba t_t
