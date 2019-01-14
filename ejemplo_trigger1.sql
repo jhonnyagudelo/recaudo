@@ -147,3 +147,13 @@ EXECUTE PROCEDURE add_log_trigg_function();
 
 -------------------------------------------------------------------------------------------------------------------
 
+SELECT nationality, COUNT(book_id),
+       SUM(IF(year < 1950, 1, 0)) AS'<1950',
+       SUM(IF(year >= 1950ANDyear < 1990, 1, 0)) AS'<1990',
+       SUM(IF(year >= 1990ANDyear < 2000, 1, 0)) AS'<2000',
+       SUM(IF(year >= 2000, 1, 0)) AS'< HOY'
+FROM books AS B
+JOINauthorsAS A
+ON A.author_id = B.author_id
+WHERE A.nationality IS NOT NULL
+GROUPBY A.nationality

@@ -188,7 +188,8 @@ DECLARE
   UPDATE tiempo SET tiempo_marcada = time_marked WHERE id_tiempo = idtiempo;
   RAISE NOTICE 'ingreso el tiempo  ------>%', time_marked;
   BEGIN
-  UPDATE tiempo SET numero_caida =  (SELECT EXTRACT( MINUTE FROM tiempo_marcada - (tiempomax))) WHERE id_tiempo = idtiempo;
+  UPDATE tiempo SET numero_caida =  (SELECT EXTRACT( MINUTE FROM tiempo_marcada - (tiempomax)))
+                                      WHERE id_tiempo = idtiempo;
   -- RAISE NOTICE 'se cayo con   ------>% minutos', numero_caida;
   END;
   END;
