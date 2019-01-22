@@ -1,5 +1,5 @@
 
-CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,idturno int)RETURNS void  AS $costo_turno$
+CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision)RETURNS void  AS $costo_turno$
   DECLARE
   num_positivo int;
   costo DOUBLE PRECISION;
@@ -14,18 +14,22 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   BEGIN
   ----- INSERT
 
-  INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto, id_turno)
-    VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, idturno);
+  INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto,vehiculo)
+    VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto,vehiculo);
     RAISE NOTICE 'ingreso valores con exitos';
   BEGIN
-    idcostoturno:=(SELECT MAX(id_costo_turno)FROM costo_turno);
+    idcostoturno:=(SELECT id_turno
+										FROM turno t
+											INNER JOIN rodamiento r_t
+												ON r_t.id_rodamiento = t.rodamiento
+											INNER JOIN vehiculo v_r
+												ON r_t.numero_interno = v_r.numero_interno
+										WHERE TRUE
+											AND CURRENT_DATE::TIMESTAMP <= t.create_at
+											AND t.vehiculo = 7118
+												ORDER BY r_t.id_rodamiento, r_t.hora_salida DESC limit 1);
 
-    num_vehiculo:=( SELECT numero_interno FROM rodamiento
-                      WHERE id_rodamiento =
-                        (SELECT rodamiento FROM turno
-                            WHERE id_turno =
-                              (SELECT id_turno FROM costo_turno
-                                  WHERE id_costo_turno = idcostoturno)));
+
     idhelp:=(SELECT aa.id_ayuda FROM costo_turno ct
                     INNER JOIN turno t
                       ON ct.id_turno = t.id_turno
@@ -43,19 +47,12 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
                       ON aa.id_ayuda = r.id_ayuda WHERE  ct.id_costo_turno = idcostoturno);
     --------INSERT VEHICULO--------------
 
-    UPDATE costo_turno SET vehiculo = (SELECT numero_interno FROM rodamiento
-                                        WHERE id_rodamiento =
-                                          (SELECT rodamiento FROM turno
-                                              WHERE id_turno =
-                                                (SELECT id_turno FROM costo_turno
-                                                    WHERE id_costo_turno = idcostoturno))),
-                          numero_turno = (SELECT numero_turno FROM turno
+    UPDATE costo_turno SET numero_turno = (SELECT numero_turno FROM turno
                                             WHERE id_turno =
-                                              (SELECT id_turno FROM costo_turno
-                                                WHERE id_costo_turno = idcostoturno)) where id_costo_turno = idcostoturno;
+                                          (SELECT id_turno FROM costo_turno
+                                            WHERE id_costo_turno = idcostoturno))
+    																				WHERE id_costo_turno = idcostoturno;
 
-      RAISE NOTICE 'El vehiculo es %', num_vehiculo;
-      -- RAISE NOTICE 'El numero del turno es %', numero_turno;
 
     -------------AYUDA AUXILIAR---------------------------
 
@@ -106,15 +103,33 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   $costo_turno$ LANGUAGE plpgsql VOLATILE;
 
 --------------------------------------------------------------------------------------------------
-
+-----------------------------------------------PRADERA--------------------------------------------
 
 
 WITH turn(id_turno) AS (
-	VALUES(1)
+	VALUES(2)
 	)
-	,consulta AS (
+, data_turno AS (
+	SELECT
+		t.*
+		, coalesce((
+						SELECT
+						  EXTRACT(MINUTES FROM t.hora_salida - t_1.hora_salida)
+						FROM turno t_1
+					 	WHERE TRUE
+					 		AND CURRENT_DATE::TIMESTAMP <= t_1.create_at
+					 		AND t_1.hora_salida < t.hora_salida
+					 		AND t_1.id_ruta = t.id_ruta
+					 	limit 1
+					),7) AS diferencia
+	FROM turn tn
+		INNER JOIN turno t
+			ON t.id_turno = tn.id_turno
+)
+
+,consulta AS (
 		SELECT
-		c.id_turno
+		t.id_turno
 		,t.numero_turno
 		,tp.nombre_marcada
 		,t.hora_salida
@@ -122,44 +137,71 @@ WITH turn(id_turno) AS (
 		,tp.tiempo_marcada
 		,tp.numero_caida
 		,t.vehiculo
+		,diferencia
 
 		,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
 						OVER(
 							PARTITION BY tp.id_turno
 							) AS total_caida
+
+	,CASE
+		WHEN tp.numero_caida >= diferencia
+			THEN diferencia
+				ELSE tp.numero_caida
+	END AS min_cancelar
+
+
     ,CASE
 				WHEN tp.nombre_marcada = 'Albeiro'
-  					THEN tp.numero_caida * 10000
- 				WHEN tp.nombre_marcada = 'La Y'
- 						THEN tp.numero_caida * 10000
-				WHEN tp.numero_caida >=1
-					THEN numero_caida * 5000
-				ELSE 0
-				END AS cancelar
+  					THEN (CASE
+				WHEN tp.numero_caida >= diferencia
+						THEN diferencia
+				ELSE tp.numero_caida
+							END) * 10000
 
-		FROM turn c
+ 				WHEN tp.nombre_marcada = 'La Y'
+ 						THEN (CASE
+				WHEN tp.numero_caida >= diferencia
+						THEN diferencia
+				ELSE tp.numero_caida
+							END) * 10000
+
+				WHEN tp.numero_caida >=1
+					THEN (CASE
+				WHEN tp.numero_caida >= diferencia
+						THEN diferencia
+				ELSE tp.numero_caida
+						END) * 5000
+				ELSE 0
+		END AS cancelar
+
+		FROM data_turno t
 		INNER JOIN tiempo tp
-			ON tp.id_turno = c.id_turno
-			INNER JOIN turno t
-			ON t.id_turno = tp.id_turno
+			ON tp.id_turno = t.id_turno
+		INNER JOIN turn tn
+			 ON tp.id_turno = tn.id_turno
+
 		WHERE TRUE
-			ORDER BY tp.tiempo_max
+		ORDER BY tp.tiempo_max
 		)
 
-	SELECT
-	c.id_turno
-	,c.vehiculo
-	,c.numero_turno
-	,c.nombre_marcada
-	,c.hora_salida
-	,c.tiempo_max
-	,c.tiempo_marcada
-	,c.numero_caida
-	,c.total_caida
-	,cancelar
-	,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
-	,vehiculo
-	FROM consulta c;
 
-
---------------------------------------------------------------------------------------------------------------v
+		SELECT
+		c.id_turno
+		,c.vehiculo
+		,c.numero_turno
+		,c.nombre_marcada
+		,c.hora_salida
+		,c.tiempo_max
+		,c.tiempo_marcada
+		,c.numero_caida
+		,c.total_caida
+		,cancelar
+		,min_cancelar
+		,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
+		,vehiculo
+FROM consulta c;
+----------------------------------------------------COSTARICA--------------------------------------------------------
+WITH turn(id_turno) AS (
+	VALUES()
+	)
