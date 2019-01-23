@@ -1,5 +1,11 @@
 
 CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision)RETURNS void  AS $costo_turno$
+  /*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Insertar turno
+ * statement in PostgreSQL.
+ */
+
   DECLARE
   num_positivo int;
   costo DOUBLE PRECISION;
@@ -104,10 +110,16 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
 
 --------------------------------------------------------------------------------------------------
 -----------------------------------------------PRADERA--------------------------------------------
-
-
+CREATE OR REPLACE VIEW vista_pradera AS
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Insertar turno
+ * statement in PostgreSQL.
+ */
 WITH turn(id_turno) AS (
-	VALUES(2)
+
+
+	VALUES(3)
 	)
 , data_turno AS (
 	SELECT
@@ -188,7 +200,6 @@ WITH turn(id_turno) AS (
 
 		SELECT
 		c.id_turno
-		,c.vehiculo
 		,c.numero_turno
 		,c.nombre_marcada
 		,c.hora_salida
@@ -197,11 +208,7 @@ WITH turn(id_turno) AS (
 		,c.numero_caida
 		,c.total_caida
 		,cancelar
-		,min_cancelar
 		,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
 		,vehiculo
 FROM consulta c;
 ----------------------------------------------------COSTARICA--------------------------------------------------------
-WITH turn(id_turno) AS (
-	VALUES()
-	)

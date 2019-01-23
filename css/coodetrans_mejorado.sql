@@ -5,25 +5,42 @@
 
 -------------------------------------------------------------------------------------------------------------------
 
-CREATE OR REPLACE FUNCTION turn(idrodamiento INT, ruta INT,num_turno INT, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION turn(num_vehiculo INT, idrodamiento INT, ruta INT,num_turno INT, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
 DECLARE
 
-num_vehiculo INT;
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Insertar turno
+ * statement in PostgreSQL.
+ */
+
 numturno INT;
 nombre_ruta varchar(30);
 horario_salida TIME;
 BEGIN
 
-INSERT INTO turno( rodamiento, id_ruta, numero_turno, mensaje) VALUES ( idrodamiento, ruta, num_turno, mensaje);
+INSERT INTO turno( rodamiento, id_ruta, numero_turno, mensaje,vehiculo) VALUES ( idrodamiento, ruta, num_turno, mensaje,num_vehiculo);
 RAISE NOTICE 'INGRESARON LOS DATOS CON EXITO';
 BEGIN
-numturno:=(SELECT MAX(id_turno) FROM turno);
+
+numturno:=(SELECT id_turno
+                    FROM turno t
+                      INNER JOIN rodamiento r_t
+                        ON r_t.id_rodamiento = t.rodamiento
+                      INNER JOIN vehiculo v_r
+                        ON r_t.numero_interno = v_r.numero_interno
+                    WHERE TRUE
+                      AND CURRENT_DATE::TIMESTAMP <= t.create_at
+                      AND t.vehiculo = num_vehiculo
+                        ORDER BY r_t.id_rodamiento, r_t.hora_salida DESC limit 1);
+
+
+
 nombre_ruta:=(select nombre from ruta WHERE id_ruta = (SELECT id_ruta FROM turno WHERE id_turno= numturno));
-num_vehiculo:=( SELECT numero_interno FROM rodamiento WHERE id_rodamiento = (SELECT rodamiento FROM turno WHERE id_turno =numturno ));
 UPDATE turno SET vehiculo = num_vehiculo
   ,hora_salida = (SELECT hora_salida FROM rodamiento WHERE id_rodamiento = (SELECT rodamiento FROM turno WHERE id_turno = numturno) ) WHERE id_turno = numturno;
 RAISE NOTICE 'El vehiculo de esta ruta es %', num_vehiculo;
-RAISE NOTICE 'El numero de tur"no es %', num_turno;
+RAISE NOTICE 'El numero de turno es %', num_turno;
 RAISE NOTICE 'El en la ruta %', nombre_ruta;
 END;
 END;
@@ -95,6 +112,12 @@ FROM turno t_r;
 -------------------------------------------------------------------------
 -- numero de caida
 CREATE OR REPLACE FUNCTION marked(idtiempo INT,time_marked TIME) RETURNS VOID AS $marcada$
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Insertar tiempos
+ * statement in PostgreSQL.
+ */
+
 DECLARE
     tiempomax TIME;
     caida INT;
@@ -150,6 +173,12 @@ DECLARE
 ----------------------------------------------------------------------------------------------------------------
 ---con vehiculo
 CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: trigger tiempo
+ * statement in PostgreSQL.
+ */
+
 DECLARE
   horario_salida TIME;
   numturno INT;
@@ -191,6 +220,12 @@ DECLARE
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
 CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,vehiculo INT)RETURNS void  AS $costo_turno$
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Costo ruta
+ * statement in PostgreSQL.
+ */
+
   DECLARE
   num_positivo int;
   costo DOUBLE PRECISION;
@@ -217,7 +252,7 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
                         ON r_t.numero_interno = v_r.numero_interno
                     WHERE TRUE
                       AND CURRENT_DATE::TIMESTAMP <= t.create_at
-                      AND t.vehiculo = vehiculo
+                      AND t.vehiculo = num_vehiculo
                         ORDER BY r_t.id_rodamiento, r_t.hora_salida DESC limit 1);
 
 

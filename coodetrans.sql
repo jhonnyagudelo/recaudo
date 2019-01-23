@@ -401,3 +401,119 @@ $costo_de_turno$ LANGUAGE plpgsql;
   AFTER UPDATE ON turno
   FOR EACH ROW
   EXECUTE PROCEDURE shift_cost();
+  ------------------------------------------------------------------------------------------------------------------------
+  WITH turn(id_turno) AS (
+  VALUES(1)
+  )
+, data_turno AS (
+  SELECT
+    t.*
+    , coalesce((
+            SELECT
+              EXTRACT(MINUTES FROM t.hora_salida - t_1.hora_salida)
+            FROM turno t_1
+            WHERE TRUE
+              AND CURRENT_DATE::TIMESTAMP <= t_1.create_at
+              AND t_1.hora_salida < t.hora_salida
+              AND t_1.id_ruta = t.id_ruta
+            limit 1
+          ),7) AS diferencia
+  FROM turn tn
+    INNER JOIN turno t
+      ON t.id_turno = tn.id_turno
+    WHERE TRUE
+)
+
+-- ,vehiculo_next AS(
+--  SELECT
+--      t.vehiculo
+--    FROM turno t
+--      INNER JOIN rodamiento r_t
+--        ON r_t.id_rodamiento = t.rodamiento
+--      INNER JOIN vehiculo v_r
+--        ON r_t.numero_interno = v_r.numero_interno
+--    WHERE TRUE
+--    AND r_t.vehiculo >t.numero_interno
+--   ORDER BY r_t.id_rodamiento, r_t.numero_interno asc limit 1
+--  )
+
+
+,consulta AS (
+    SELECT
+    t.id_turno
+    ,t.numero_turno
+    ,tp.nombre_marcada
+    ,t.hora_salida
+    ,tp.tiempo_max
+    ,tp.tiempo_marcada
+    ,tp.numero_caida
+    ,t.vehiculo
+    ,r.nombre
+    ,diferencia
+
+    ,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
+            OVER(
+              PARTITION BY tp.id_turno
+              ) AS total_caida
+
+  ,CASE
+    WHEN tp.numero_caida >= diferencia
+      THEN diferencia
+        ELSE tp.numero_caida
+  END AS min_cancelar
+
+    ,CASE
+        WHEN tp.nombre_marcada = 'Albeiro'
+            THEN (CASE
+        WHEN tp.numero_caida >= diferencia
+            THEN diferencia
+        ELSE tp.numero_caida
+              END) * 10000
+
+        WHEN tp.nombre_marcada = 'La Y'
+            THEN (CASE
+        WHEN tp.numero_caida >= diferencia
+            THEN diferencia
+        ELSE tp.numero_caida
+              END) * 10000
+
+        WHEN tp.numero_caida >=1
+          THEN (CASE
+        WHEN tp.numero_caida >= diferencia
+            THEN diferencia
+        ELSE tp.numero_caida
+            END) * 5000
+        ELSE 0
+    END AS cancelar
+
+
+
+    FROM data_turno t
+    INNER JOIN tiempo tp
+      ON tp.id_turno = t.id_turno
+    INNER JOIN turn tn
+       ON tp.id_turno = tn.id_turno
+    INNER JOIN ruta r
+      ON t.id_ruta = r.id_ruta
+
+    WHERE TRUE
+    ORDER BY tp.tiempo_max
+    )
+
+    SELECT
+    c.id_turno
+    -- ,c.nombre
+    ,c.vehiculo
+    ,c.numero_turno
+    ,c.nombre_marcada
+    ,c.hora_salida
+    ,c.tiempo_max
+    ,c.tiempo_marcada
+    ,c.numero_caida
+    ,c.total_caida
+    ,cancelar
+    -- ,min_cancelar
+    ,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
+    ,vehiculo
+FROM consulta c;
+---------------------------------------------------------------------------------------------------------------------------
