@@ -180,6 +180,7 @@ CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
  */
 
 DECLARE
+  time_exit 
   horario_salida TIME;
   numturno INT;
   bus INT;

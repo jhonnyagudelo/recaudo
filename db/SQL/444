@@ -1,0 +1,61 @@
+WITH turn(turno_id) AS (
+	VALUES (1)
+	)
+	,tiempo_extra AS(
+		SELECT
+			t.*
+		FROM turn tn
+		INNER JOIN turno t
+			ON t.id_turno = tn.turno_id
+		INNER JOIN ruta t_r
+			ON t.id_turno = r_t.id_ruta
+		INNER JOIN ruta_reloj rr_r
+			ON	rr_r.id_ruta = r_t.id_ruta
+		INNER JOIN tiempo_extra t_e
+		 	ON rr_r.id_ruta_reloj = ruta_reloj_id
+		WHERE TRUE
+		AND CURRENT_DATE >= '05:00:00'
+		)
+		,consulta AS(
+			 SELECT
+			 t.id_turno
+			 ,t.numero_turno
+			 ,tp.nombre_marcada
+			 ,t.hora_salida
+			 ,tp.tiempo_max
+			 ,tp.tiempo_marcada
+			 ,tp.numero_caida
+			 ,t.vehiculo
+			 ,t_e.hora
+
+			 CASE
+			 	WHEN t.hora_salida >= '17:00:00'
+					THEN
+			)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		SELECT
+			t.*
+			,t_e.tiempo_max
+		FROM turno t
+		INNER JOIN ruta_reloj rr_r
+			ON	rr_r.id_ruta = t.id_ruta
+		INNER JOIN tiempo_extra t_e
+		 	ON rr_r.id_ruta_reloj = t_e.ruta_reloj_id
+		WHERE TRUE
+		AND CURRENT_TIME >= '17:00:00'::time
+		ORDER BY t_e.tiempo_max  LIMIT 1;
