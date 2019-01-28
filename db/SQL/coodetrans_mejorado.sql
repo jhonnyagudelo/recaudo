@@ -1,11 +1,4 @@
-
------------------------------------------------------------------------------------------------------
-
-
-
--------------------------------------------------------------------------------------------------------------------
-
-CREATE OR REPLACE FUNCTION turn(num_vehiculo INT, idrodamiento INT, ruta INT,num_turno INT, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
+CREATE OR REPLACE FUNCTION turn(num_vehiculo INT, ruta INT,num_turno INT,salida TIME, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
 DECLARE
 
 /*
@@ -16,29 +9,40 @@ DECLARE
 
 numturno INT;
 nombre_ruta varchar(30);
-horario_salida TIME;
 BEGIN
 
-INSERT INTO turno( rodamiento, id_ruta, numero_turno, mensaje,vehiculo) VALUES ( idrodamiento, ruta, num_turno, mensaje,num_vehiculo);
+INSERT INTO turno( vehiculo,id_ruta,numero_turno,hora_salida, mensaje) VALUES ( num_vehiculo, ruta, num_turno,salida, mensaje);
 RAISE NOTICE 'INGRESARON LOS DATOS CON EXITO';
 BEGIN
 
 numturno:=(SELECT id_turno
-                    FROM turno t
-                      INNER JOIN rodamiento r_t
-                        ON r_t.id_rodamiento = t.rodamiento
-                      INNER JOIN vehiculo v_r
-                        ON r_t.numero_interno = v_r.numero_interno
-                    WHERE TRUE
-                      AND CURRENT_DATE::TIMESTAMP <= t.create_at
-                      AND t.vehiculo = num_vehiculo
-                        ORDER BY r_t.id_rodamiento, r_t.hora_salida DESC limit 1);
-
-
+        FROM turno t
+          INNER JOIN rodamiento r_t
+            ON r_t.numero_interno = t.vehiculo
+          INNER JOIN vehiculo v_r
+            ON r_t.numero_interno = v_r.numero_interno
+        WHERE TRUE
+          AND CURRENT_DATE::TIMESTAMP <= t.create_at
+          AND t.vehiculo = num_vehiculo
+          AND numero_turno = num_turno
+        ORDER BY r_t.id_rodamiento DESC limit 1);
 
 nombre_ruta:=(select nombre from ruta WHERE id_ruta = (SELECT id_ruta FROM turno WHERE id_turno= numturno));
-UPDATE turno SET vehiculo = num_vehiculo
-  ,hora_salida = (SELECT hora_salida FROM rodamiento WHERE id_rodamiento = (SELECT rodamiento FROM turno WHERE id_turno = numturno) ) WHERE id_turno = numturno;
+
+UPDATE turno SET rodamiento = (
+  SELECT
+    r_t.id_rodamiento
+  FROM turno t
+  INNER JOIN rodamiento r_t
+ 	ON r_t.numero_interno = t.vehiculo
+  WHERE TRUE
+  AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND t.create_at > r_t.create_at
+    AND t.vehiculo = r_t.numero_interno
+  ORDER BY  r_t.id_rodamiento DESC limit 1
+
+) WHERE id_turno = numturno;
+
 RAISE NOTICE 'El vehiculo de esta ruta es %', num_vehiculo;
 RAISE NOTICE 'El numero de turno es %', num_turno;
 RAISE NOTICE 'El en la ruta %', nombre_ruta;
@@ -180,7 +184,6 @@ CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
  */
 
 DECLARE
-  time_exit 
   horario_salida TIME;
   numturno INT;
   bus INT;
@@ -198,7 +201,13 @@ DECLARE
     )
     SELECT
       NEW.id_turno
-       ,horario_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
+      ,CASE
+       WHEN t.hora_salida < t_e.hora
+             THEN t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
+       WHEN t.hora_salida >= t_e.hora
+            THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+       ELSE '00:00:00'
+       END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
     FROM turno t
@@ -206,7 +215,7 @@ DECLARE
         ON t.id_ruta = r.id_ruta
       INNER JOIN ruta_reloj rr_r
         ON r.id_ruta = rr_r.id_ruta
-       INNER JOIN reloj rl
+      INNER JOIN reloj rl
         ON rr_r.id_reloj = rl.id_reloj
     WHERE TRUE
       AND t.id_turno = NEW.id_turno
@@ -214,10 +223,8 @@ DECLARE
     ;
   END IF;
   RETURN NEW;
-
   END;
-
-    $_time$ LANGUAGE plpgsql;
+  $_time$ LANGUAGE plpgsql;
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
 CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,vehiculo INT)RETURNS void  AS $costo_turno$
