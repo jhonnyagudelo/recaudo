@@ -205,7 +205,10 @@ DECLARE
        WHEN t.hora_salida < t_e.hora
              THEN t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
        WHEN t.hora_salida >= t_e.hora
-            THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+            THEN( CASE WHEN 
+
+              )
+            t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
        ELSE '00:00:00'
        END AS tiempo_max
        ,nombre_reloj

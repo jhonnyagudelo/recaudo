@@ -23,7 +23,12 @@ DECLARE
         )
         SELECT
           NEW.id_turno
-           ,horario_salida + (rr_r.tiempo_max|| 'minute')::INTERVAL---case
+          ,CASE
+          WHEN t.hora_salida < t_e.hora 
+            THEN  t.hora_salida + (rr_r.tiempo_max  || 'minute')::INTERVAL
+          WHEN t.hora_salida >=  t_e.hora
+           THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+          ELSE  t.hora_salida + (rr_r.tiempo_max  || 'minute')::INTERVAL
            ,nombre_reloj
            ,vehiculo
         FROM turno t
@@ -33,10 +38,9 @@ DECLARE
     			ON rr_r.id_ruta = r.id_ruta
         INNER JOIN reloj rl
           ON rr_r.id_reloj = rl.id_reloj
-    		INNER JOIN tiempo_extra t_e
+    		LEFT OUTER JOIN tiempo_extra t_e
     			ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
     		WHERE TRUE
-    		AND t.hora_salida >= t_e.hora
     		ORDER BY id_ruta_reloj;
 
   END IF;
