@@ -1,21 +1,23 @@
 WITH turn(turno_id) AS (
-  VALUES(2)
+  VALUES(4)
   )
   ,tiempo AS (
    SELECT
    t.id_turno
    ,t.vehiculo
    ,t_e.tiempo_adicional
+   ,rr_r.tiempo_max
    ,t_e.hora
    ,rl.nombre_reloj
    ,t.hora_salida
+
    ,CASE
-  WHEN t.hora_salida < t_e.hora
-        THEN t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
-        WHEN t.hora_salida >= t_e.hora
-              THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
-        ELSE '00:00:00'
-  END AS tiempo_max
+   WHEN t.hora_salida < t_e.hora ---'17:00:00'::TIME
+     THEN  t.hora_salida + (rr_r.tiempo_max  || 'minute')::INTERVAL
+   WHEN t.hora_salida >=  t_e.hora ---'17:00:00'::TIME ---t_e.hora
+    THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+        ELSE  t.hora_salida + (rr_r.tiempo_max  || 'minute')::INTERVAL
+  END AS tiempo_maxi
 
   FROM turn tn
    INNER JOIN turno t
@@ -25,8 +27,8 @@ WITH turn(turno_id) AS (
    INNER JOIN ruta_reloj rr_r
            ON rr_r.id_ruta = r.id_ruta
    LEFT OUTER JOIN tiempo_extra t_e
-           ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
-  LEFT OUTER JOIN reloj rl
+          ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
+   INNER JOIN reloj rl
           ON rr_r.id_reloj = rl.id_reloj
    WHERE TRUE
    ORDER BY id_ruta_reloj
@@ -34,10 +36,12 @@ WITH turn(turno_id) AS (
    SELECT
   c.id_turno
   ,c.vehiculo
+  ,c.tiempo_max
   ,c.tiempo_adicional
   ,c.hora_salida
+  ,c.hora
   ,c.nombre_reloj
-  ,tiempo_max
+  ,tiempo_maxi
   FROM tiempo c;
 
 ------------------------revisar------------------------
@@ -115,3 +119,19 @@ DECLARE
   RETURN NEW;
   END;
   $_time$ LANGUAGE plpgsql;
+--------------------------------------------------------------------------
+WITH rute(ruta_id) AS (
+  VALUES(4)
+  )
+SELECT
+rr_r.id_ruta_reloj
+,rr_r.tiempo_max
+,t_e.ruta_reloj_id
+, t_e.tiempo_adicional
+FROM rute re
+INNER JOIN ruta r
+  ON re.ruta_id = r.id_ruta
+INNER JOIN ruta_reloj rr_r
+  ON rr_r.id_ruta = r.id_ruta
+LEFT OUTER JOIN tiempo_extra t_e
+  ON id_ruta_reloj = t_e.ruta_reloj_id
