@@ -65,4 +65,3 @@ WITH turn(id_turno) AS (
 maxi candelaria = 70.000
 buga 50.000;
 costa rica 70.0001
-
