@@ -1,4 +1,4 @@
-pg_dump -U postgres -v -F c recaudo_prueba > C:\Users\jhonn\Desktop\Coodetrans\db\recaudo_backup_prueba_mejor.dump
+pg_dump -U postgres -v -F c nuevo_prueba > C:\Users\jhonn\Desktop\Coodetrans\db\recaudo_backup_mejor.dump
 
 pg_dump -U postgres -v -F c recaudo_marcada < C:\Users\jhonn\Desktop\Coodetrans\db\coodetrans_backup.dump
 

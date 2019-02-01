@@ -205,11 +205,8 @@ DECLARE
        WHEN t.hora_salida < t_e.hora
              THEN t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
        WHEN t.hora_salida >= t_e.hora
-            THEN( CASE WHEN 
-
-              )
-            t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
-       ELSE '00:00:00'
+            THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+       ELSE t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
        END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
@@ -217,20 +214,21 @@ DECLARE
       INNER JOIN ruta r
         ON t.id_ruta = r.id_ruta
       INNER JOIN ruta_reloj rr_r
-        ON r.id_ruta = rr_r.id_ruta
+        ON t.id_ruta = rr_r.id_ruta
+      LEFT JOIN tiempo_extra
+        ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
       INNER JOIN reloj rl
         ON rr_r.id_reloj = rl.id_reloj
     WHERE TRUE
       AND t.id_turno = NEW.id_turno
-      ORDER BY rr_r.id_ruta_reloj
-    ;
+      ORDER BY rr_r.id_ruta_reloj;
   END IF;
   RETURN NEW;
   END;
   $_time$ LANGUAGE plpgsql;
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
-CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,vehiculo INT)RETURNS void  AS $costo_turno$
+CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta
@@ -243,7 +241,6 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   porcentaje double precision;
   ruta_ayuda varchar(20);
   idcostoturno int;
-  num_vehiculo int;
   turno INT;
   idhelp INT;
   turn_help DOUBLE PRECISION;
@@ -255,17 +252,18 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
     VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, num_vehiculo);
     RAISE NOTICE 'ingreso valores con exitos';
   BEGIN
-    idcostoturno:=(SELECT id_turno
-                    FROM turno t
-                      INNER JOIN rodamiento r_t
-                        ON r_t.id_rodamiento = t.rodamiento
-                      INNER JOIN vehiculo v_r
-                        ON r_t.numero_interno = v_r.numero_interno
-                    WHERE TRUE
-                      AND CURRENT_DATE::TIMESTAMP <= t.create_at
-                      AND t.vehiculo = num_vehiculo
-                        ORDER BY r_t.id_rodamiento, r_t.hora_salida DESC limit 1);
 
+
+    idcostoturno:=  (SELECT id_turno
+                        FROM turno t
+                          INNER JOIN costo_turno c_t
+                            ON t.vehiculo = c_t.vehiculo
+                        WHERE TRUE
+                            AND CURRENT_DATE::TIMESTAMP <= t.create_at
+                            AND t.vehiculo = vehiculo
+                        ORDER BY r_t.id_rodamiento,t.hora_salida  DESC limit 1);
+
+  UPDATE costo_turno SET id_turno = idcostoturno;
 
     idhelp:=(SELECT aa.id_ayuda FROM costo_turno ct
                     INNER JOIN turno t
@@ -283,41 +281,45 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
                     INNER JOIN ayuda_auxiliar aa
                       ON aa.id_ayuda = r.id_ayuda WHERE  ct.id_costo_turno = idcostoturno);
     --------INSERT VEHICULO--------------
-
-    UPDATE costo_turno SET numero_turno = (SELECT numero_turno FROM turno
-                                            WHERE id_turno =
-                                              (SELECT id_turno FROM costo_turno
-                                                WHERE id_costo_turno = idcostoturno)) WHERE id_costo_turno = idcostoturno;
-
-
+UPDATE costo_turno SET numero_turno =(
+    SELECT
+    t.numero_turno
+    FROM turno t
+    INNER JOIN  costo_turno ct
+      ON t.vehiculo = ct.vehiculo
+    WHERE TRUE
+    AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND t.vehiculo = ct.vehiculo
+    AND t.numero_turno >= 0
+    ORDER BY t.hora_salida DESC limit 1)WHERE id_costo_turno = idcostoturno;
     -------------AYUDA AUXILIAR---------------------------
 
-    IF(idturno = idhelp) THEN
+    IF(idcostoturno = idhelp) THEN
       UPDATE costo_turno SET bea_neto = (bea_bruto - turn_help) WHERE id_costo_turno = idcostoturno;
           RAISE NOTICE 'ayuda_auxiliar %', turn_help;
-      ELSEIF(idturno = idhelp) THEN
+      ELSEIF(idcostoturno = idhelp) THEN
       UPDATE costo_turno SET bea_neto = (bea_bruto - turn_help) WHERE id_costo_turno = idcostoturno;
           RAISE NOTICE 'ayuda_auxiliar %', turn_help;
       ELSE
           UPDATE costo_turno SET bea_neto = bea_bruto;
       END IF;
   -------------FORMULA PARA ABORDADOS O POSITIVOS-------------------------
-    porcentaje:=(SELECT tv.valor_ruta FROM costo_turno cr
+    porcentaje:=(SELECT tt_t.valor_ruta FROM costo_turno cr
                   INNER JOIN turno t
                     ON cr.id_turno = t.id_turno
                   INNER JOIN ruta r
                     ON r.id_ruta = t.id_ruta
-                  INNER JOIN tabla_valor tv
-                    ON tv.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
+                  INNER JOIN tarifa_positivo tt_t
+                    ON tt_t.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
       RAISE NOTICE 'El porcentaje es %', porcentaje;
 
-    costo:=(SELECT tv.costo FROM costo_turno cr
+    costo:=(SELECT tt_t.costo FROM costo_turno cr
                 INNER JOIN turno t
                   ON cr.id_turno = t.id_turno
                 INNER JOIN ruta r
                   ON r.id_ruta = t.id_ruta
-                INNER JOIN tabla_valor tv
-                  ON tv.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
+                INNER JOIN tarifa_positivo tt_t
+                  ON tt_t.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
       RAISE NOTICE 'El  costo por positivo es %', costo;
 
     num_positivo:=(SELECT positivos FROM costo_turno WHERE id_costo_turno = idcostoturno);
@@ -325,7 +327,6 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
 
     formula:=(num_positivo * porcentaje) * costo;
           RAISE NOTICE 'el resultado es %', formula;
-
 
     IF (num_positivo >=6) THEN
       UPDATE costo_turno SET costo_positivo = formula,
