@@ -241,7 +241,7 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   porcentaje double precision;
   ruta_ayuda varchar(20);
   idcostoturno int;
-  turno INT;
+  turno_id INT;
   idhelp INT;
   turn_help DOUBLE PRECISION;
   formula DOUBLE PRECISION;
@@ -254,16 +254,30 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   BEGIN
 
 
-    idcostoturno:=  (SELECT id_turno
+    turno_id:=  (SELECT id_turno
                         FROM turno t
-                          INNER JOIN costo_turno c_t
-                            ON t.vehiculo = c_t.vehiculo
+                        INNER JOIN rodamiento r_t
+                            ON r_t.numero_interno = t.vehiculo
+                        INNER JOIN vehiculo v_r
+                            ON r_t.numero_interno = v_r.numero_interno
                         WHERE TRUE
                             AND CURRENT_DATE::TIMESTAMP <= t.create_at
-                            AND t.vehiculo = vehiculo
+                            AND t.vehiculo = num_vehiculo
                         ORDER BY r_t.id_rodamiento,t.hora_salida  DESC limit 1);
 
-  UPDATE costo_turno SET id_turno = idcostoturno;
+      idcostoturno:=(
+          SELECT
+          c_t.id_costo_turno
+          FROM costo_turno c_t
+          INNER JOIN turno t
+            ON c_t.id_turno = t.id_turno
+          WHERE TRUE
+          AND CURRENT_DATE::TIMESTAMP <= c_t.create_at
+          AND c_t.vehiculo = t.vehiculo
+          ORDER BY t.hora_salida, t.id_turno  DESC limit 1
+        );
+
+  UPDATE costo_turno SET id_turno = turno_id;
 
     idhelp:=(SELECT aa.id_ayuda FROM costo_turno ct
                     INNER JOIN turno t
@@ -304,23 +318,28 @@ UPDATE costo_turno SET numero_turno =(
           UPDATE costo_turno SET bea_neto = bea_bruto;
       END IF;
   -------------FORMULA PARA ABORDADOS O POSITIVOS-------------------------
-    porcentaje:=(SELECT tt_t.valor_ruta
-                  FROM costo_turno cr
-                  INNER JOIN turno t
-                    ON cr.id_turno = t.id_turno
-                  INNER JOIN ruta r
-                    ON r.id_ruta = t.id_ruta
-                  INNER JOIN tarifa_positivo tt_t
-                    ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id WHERE cr.id_costo_turno  = idcostoturno);
-      RAISE NOTICE 'El porcentaje es %', porcentaje;
-
-    costo:=(SELECT tt_t.costo FROM costo_turno cr
-                INNER JOIN turno t
-                  ON cr.id_turno = t.id_turno
+    porcentaje:=(SELECT
+                tt_t.valor_ruta
+                FROM turno t
                 INNER JOIN ruta r
-                  ON r.id_ruta = t.id_ruta
+                  ON t.id_ruta = r.id_ruta
                 INNER JOIN tarifa_positivo tt_t
-                  ON tt_t.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
+                  ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id
+                WHERE TRUE
+          	        AND t.id_ruta = r.id_ruta
+          	        AND t.vehiculo = num_vehiculo);
+                RAISE NOTICE 'El porcentaje es %', porcentaje;
+
+    costo:=(SELECT
+              tt_t.costo
+              FROM turno t
+              INNER JOIN ruta r
+                ON t.id_ruta = r.id_ruta
+              INNER JOIN tarifa_positivo tt_t
+                ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id
+              WHERE TRUE
+                  AND t.id_ruta = r.id_ruta
+                  AND t.vehiculo = num_vehiculo);
       RAISE NOTICE 'El  costo por positivo es %', costo;
 
     num_positivo:=(SELECT positivos FROM costo_turno WHERE id_costo_turno = idcostoturno);

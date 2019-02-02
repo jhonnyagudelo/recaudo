@@ -596,13 +596,19 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
           UPDATE costo_turno SET bea_neto = bea_bruto;
       END IF;
   -------------FORMULA PARA ABORDADOS O POSITIVOS-------------------------
-    porcentaje:=(SELECT tv.valor_ruta FROM costo_turno cr
-                  INNER JOIN turno t
-                    ON cr.id_turno = t.id_turno
-                  INNER JOIN ruta r
-                    ON r.id_ruta = t.id_ruta
-                  INNER JOIN tabla_valor tv
-                    ON tv.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
+    porcentaje:=(SELECT
+    tt_t.valor_ruta
+      FROM costo_turno cr
+      INNER JOIN turno t
+        ON cr.vehiculo = t.vehiculo
+      INNER JOIN ruta r
+        ON r.id_ruta = t.id_ruta
+      INNER JOIN tarifa_positivo tt_t
+        ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id
+        WHERE TRUE
+    		AND cr.vehiculo = t.vehiculo
+    		AND cr.numero_turno=t.numero_turno
+    AND cr.id_costo_turno  = idcostoturno );
       RAISE NOTICE 'El porcentaje es %', porcentaje;
 
     costo:=(SELECT tv.costo FROM costo_turno cr
