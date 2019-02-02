@@ -14,21 +14,21 @@ WITH turn(id_turno) AS (
 		,tp.numero_caida
 		,t.vehiculo
 
-		,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
-						OVER(
-							PARTITION BY tp.id_turno
-							) AS total_caida
+				,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
+								OVER(
+									PARTITION BY tp.id_turno
+									) AS total_caida
 
 
-    ,CASE
-				WHEN tp.nombre_marcada = 'Albeiro'
-  					THEN tp.numero_caida * 10000
- 				WHEN tp.nombre_marcada = 'La Y'
- 						THEN tp.numero_caida * 10000
-				WHEN tp.numero_caida >=1
-					THEN numero_caida * 5000
-				ELSE 0
-				END AS cancelar
+		    ,CASE
+						WHEN tp.nombre_marcada = 'Albeiro'
+		  					THEN tp.numero_caida * 10000
+		 				WHEN tp.nombre_marcada = 'La Y'
+		 						THEN tp.numero_caida * 10000
+						WHEN tp.numero_caida >=1
+							THEN numero_caida * 5000
+						ELSE 0
+						END AS cancelar
 
 		FROM turn c
 		INNER JOIN tiempo tp
@@ -53,13 +53,6 @@ WITH turn(id_turno) AS (
 	,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
 	,vehiculo
 	FROM consulta c;
-
-
-
-
-
-
-
 
 
 maxi candelaria = 70.000

@@ -87,13 +87,13 @@ FROM reloj v;
 
 
   ---TURNO A TIEMPO TRIIGER
-  SELECT t.id_ruta FROM ruta_reloj rr_r
-    INNER JOIN ruta r
-      ON rr_r.id_ruta = r.id_ruta
-    INNER JOIN turno t
-      ON t.id_ruta = r.id_ruta
-    WHERE
-      t.id_turno = 1;
+SELECT t.id_ruta FROM ruta_reloj rr_r
+  INNER JOIN ruta r
+    ON rr_r.id_ruta = r.id_ruta
+  INNER JOIN turno t
+    ON t.id_ruta = r.id_ruta
+  WHERE
+    t.id_turno = 1;
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -304,13 +304,14 @@ UPDATE costo_turno SET numero_turno =(
           UPDATE costo_turno SET bea_neto = bea_bruto;
       END IF;
   -------------FORMULA PARA ABORDADOS O POSITIVOS-------------------------
-    porcentaje:=(SELECT tt_t.valor_ruta FROM costo_turno cr
+    porcentaje:=(SELECT tt_t.valor_ruta
+                  FROM costo_turno cr
                   INNER JOIN turno t
                     ON cr.id_turno = t.id_turno
                   INNER JOIN ruta r
                     ON r.id_ruta = t.id_ruta
                   INNER JOIN tarifa_positivo tt_t
-                    ON tt_t.id_valor = r.id_tabla_valor WHERE cr.id_costo_turno  = idcostoturno);
+                    ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id WHERE cr.id_costo_turno  = idcostoturno);
       RAISE NOTICE 'El porcentaje es %', porcentaje;
 
     costo:=(SELECT tt_t.costo FROM costo_turno cr
