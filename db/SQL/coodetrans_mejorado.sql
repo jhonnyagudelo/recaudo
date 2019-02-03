@@ -236,7 +236,7 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
  */
 
   DECLARE
-  num_positivo int;
+  /* num_positivo int; */
   costo DOUBLE PRECISION;
   porcentaje double precision;
   ruta_ayuda varchar(20);
@@ -263,7 +263,7 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
                         WHERE TRUE
                             AND CURRENT_DATE::TIMESTAMP <= t.create_at
                             AND t.vehiculo = num_vehiculo
-                        ORDER BY r_t.id_rodamiento,t.hora_salida  DESC limit 1);
+                        ORDER BY r_t.id_rodamiento  DESC limit 1);
 
       idcostoturno:=(
           SELECT
@@ -274,10 +274,8 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
           WHERE TRUE
           AND CURRENT_DATE::TIMESTAMP <= c_t.create_at
           AND c_t.vehiculo = t.vehiculo
-          ORDER BY t.hora_salida, t.id_turno  DESC limit 1
+          ORDER BY t.id_turno  DESC limit 1
         );
-
-  UPDATE costo_turno SET id_turno = turno_id;
 
     idhelp:=(SELECT aa.id_ayuda FROM costo_turno ct
                     INNER JOIN turno t
@@ -304,8 +302,8 @@ UPDATE costo_turno SET numero_turno =(
     WHERE TRUE
     AND CURRENT_DATE::TIMESTAMP <= t.create_at
     AND t.vehiculo = ct.vehiculo
-    AND t.numero_turno >= 0
-    ORDER BY t.hora_salida DESC limit 1)WHERE id_costo_turno = idcostoturno;
+    ORDER BY t.id_turno DESC limit 1)
+    WHERE id_costo_turno = idcostoturno;
     -------------AYUDA AUXILIAR---------------------------
 
     IF(idcostoturno = idhelp) THEN
@@ -342,17 +340,17 @@ UPDATE costo_turno SET numero_turno =(
                   AND t.vehiculo = num_vehiculo);
       RAISE NOTICE 'El  costo por positivo es %', costo;
 
-    num_positivo:=(SELECT positivos FROM costo_turno WHERE id_costo_turno = idcostoturno);
-          RAISE NOTICE 'nuemro positivo es %', num_positivo;
+  UPDATE costo_turno SET id_turno = turno_id;
 
-    formula:=(num_positivo * porcentaje) * costo;
+
+    formula:=(positivo * porcentaje) * costo;
           RAISE NOTICE 'el resultado es %', formula;
 
-    IF (num_positivo >=6) THEN
+    IF (positivo >=6) THEN
       UPDATE costo_turno SET costo_positivo = formula,
       bea_neto_total  = (bea_neto + formula)
       WHERE id_costo_turno= idcostoturno;
-      ELSIF (num_positivo <= 5) THEN
+      ELSIF (positivo <= 5) THEN
       UPDATE costo_turno SET bea_neto_total =  bea_neto;
     END IF;
   END;
