@@ -137,44 +137,7 @@ DECLARE
   END;
   END;
   $marcada$ LANGUAGE plpgsql;
--------------------------------------------------------------------------------------
------sirve
-CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
-DECLARE
-  horario_salida TIME;
-  numturno INT;
-  BEGIN
-  numturno:=(SELECT MAX(id_turno)FROM turno);
-  horario_salida:=(SELECT hora_salida FROM turno WHERE id_turno = numturno);
-
-    IF(TG_OP = 'UPDATE') THEN
-    INSERT INTO tiempo (
-      id_turno
-      ,tiempo_max
-    )
-    SELECT
-      NEW.id_turno
-       ,horario_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
-    FROM ruta r
-      INNER JOIN ruta_reloj rr_r
-        ON r.id_ruta = rr_r.id_ruta
-    WHERE TRUE
-      AND r.id_ruta = NEW.id_ruta
-    ;
-  END IF;
-  RETURN NEW;
-
-  END;
-
-    $_time$ LANGUAGE plpgsql;
-
-  CREATE TRIGGER after_insert_turn
-  AFTER UPDATE ON turno
-  FOR EACH ROW
-  EXECUTE PROCEDURE add_turn_time();
-
-
-----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------
 ---con vehiculo
 CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
 /*
@@ -215,7 +178,7 @@ DECLARE
         ON t.id_ruta = r.id_ruta
       INNER JOIN ruta_reloj rr_r
         ON t.id_ruta = rr_r.id_ruta
-      LEFT JOIN tiempo_extra
+      LEFT JOIN tiempo_extra t_e
         ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
       INNER JOIN reloj rl
         ON rr_r.id_reloj = rl.id_reloj
@@ -226,6 +189,11 @@ DECLARE
   RETURN NEW;
   END;
   $_time$ LANGUAGE plpgsql;
+
+  CREATE TRIGGER after_insert_turn
+  AFTER UPDATE ON turno
+  FOR EACH ROW
+  EXECUTE PROCEDURE add_turn_time();
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
 CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
@@ -252,7 +220,6 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
     VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, num_vehiculo);
     RAISE NOTICE 'ingreso valores con exitos';
   BEGIN
-
 
     turno_id:=  (SELECT id_turno
                         FROM turno t
@@ -301,6 +268,7 @@ UPDATE costo_turno SET numero_turno =(
       ON t.vehiculo = ct.vehiculo
     WHERE TRUE
     AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND c_t.create_at > c_t.create_at
     AND t.vehiculo = ct.vehiculo
     ORDER BY t.id_turno DESC limit 1)
     WHERE id_costo_turno = idcostoturno;

@@ -47,6 +47,20 @@ WITH turn(turno_id) AS (
   FROM tiempo c;
 
 ------------------------revisar------------------------
+SELECT
+  id_turno
+FROM turno t
+  INNER JOIN rodamiento r_t
+  ON r_t.numero_interno = t.vehiculo
+INNER JOIN vehiculo v_r
+  ON r_t.numero_interno = v_r.numero_interno
+WHERE TRUE
+  AND CURRENT_DATE::TIMESTAMP <= t.create_at
+  AND t.numero_turno = numero_t
+  AND t.vehiculo = num_vehiculo
+ORDER BY t.hora_salida  DESC limit 1
+
+
 
 
 SELECT id_turno
@@ -105,15 +119,71 @@ LEFT OUTER JOIN tiempo_extra t_e
                     AND t.vehiculo = num_vehiculo
                       ORDER BY r_t.id_rodamiento, t.hora_salida DESC limit 1);
 ---------------------------------------------------------------------------------------------------------
+SELECT numero_turno FROM turno WHERE id_turno =( SELECT id_turno FROM costo_turno WHERE id_costo_turno =1)
+
 SELECT
-t.numero_turno
-FROM turno t
-INNER JOIN  costo_turno ct
-  ON t.vehiculo = ct.vehiculo
+    tt_t.valor_ruta
+  FROM turno t
+  INNER JOIN ruta r
+    ON t.id_ruta = r.id_ruta
+  INNER JOIN tarifa_positivo tt_t
+    ON tt_t.tarifa_positivo_id = r.tarifa_positivo_id
+  WHERE TRUE
+    AND t.id_ruta = r.id_ruta
+    AND t.vehiculo = 4001;
+
+SELECT
+tt_t.valor_ruta
+FROM costo_turno c_t
+INNER JOIN turno t
+  ON t.id_turno = c_t.id_turno
+INNER JOIN ruta r_t
+  ON r_t.id_ruta = t.id_ruta
+INNER JOIN tarifa_positivo tt_t
+ ON tt_t.tarifa_positivo_id = r_t.tarifa_positivo_id
 WHERE TRUE
-AND CURRENT_DATE::TIMESTAMP <= t.create_at
-AND numero_turno >= 0
+  AND c_t.vehiculo = t.VEHICULO
+  AND t.numero_turno = c_t.numero_turno;
 
 
-SELECT
-FROM
+--------------------------------------------- ayuda_auxiliar
+idhelp:=(
+  SELECT aa.id_ayuda
+    FROM costo_turno ct
+  INNER JOIN turno t
+    ON ct.id_turno = t.id_turno
+  INNER JOIN ruta r
+    ON r.id_ruta = t.id_ruta
+  INNER JOIN ayuda_auxiliar aa
+    ON aa.id_ayuda = r.id_ayuda
+WHERE  ct.id_costo_turno =idcostoturno);
+
+turn_help:= (
+  SELECT aa.precio
+    FROM costo_turno ct
+  INNER JOIN turno t
+    ON ct.id_turno = t.id_turno
+  INNER JOIN ruta r
+    ON r.id_ruta = t.id_ruta
+  INNER JOIN ayuda_auxiliar aa
+    ON aa.id_ayuda = r.id_ayuda
+  WHERE TRUE
+    AND ct.id_costo_turno = idcostoturno);
+
+IF(idcostoturno = idhelp) THEN
+UPDATE costo_turno SET bea_neto = (bea_bruto - turn_help) WHERE id_costo_turno = idcostoturno;
+    RAISE NOTICE 'ayuda_auxiliar %', turn_help;
+ELSE
+    UPDATE costo_turno SET bea_neto = bea_bruto;
+END IF;
+
+
+
+
+
+UPDATE a
+SET price = b_alias.unit_price
+FROM      a AS a_alias
+LEFT JOIN b AS b_alias ON a_alias.b_fk = b_alias.id
+WHERE a_alias.unit_name LIKE 'some_value'
+AND a.id = a_alias.id;
