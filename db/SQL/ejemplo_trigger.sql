@@ -2,7 +2,7 @@
 
     -- DROP FUNCTION im_detalle_1_actualiza_ingreso();
 
-    CREATE OR REPLACE FUNCTION im_detalle_1_actualiza_ingreso() RETURNS trigger AS
+    CREATE OR REPLACE FUNCTION 1() RETURNS trigger AS
     $BODY$
     DECLARE
     -- Declaramos las variables con el mismo tipo del definido en la tabla

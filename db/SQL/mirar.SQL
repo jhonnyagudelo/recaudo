@@ -187,3 +187,42 @@ FROM      a AS a_alias
 LEFT JOIN b AS b_alias ON a_alias.b_fk = b_alias.id
 WHERE a_alias.unit_name LIKE 'some_value'
 AND a.id = a_alias.id;
+
+
+
+SELECT
+r.id_ruta
+FROM ruta r
+INNER JOIN turno t_r
+  ON r.id_ruta = t_r.id_ruta
+INNER JOIN costo_turno t_c
+  ON t_r.id_turno = t_c.id_turno
+WHERE TRUE
+AND t_r.vehiculo = c_t.vehiculo;
+
+
+SELECT
+  r.id_ayuda, r.id_ruta, r_aa.id_ayuda
+FROM costo_turno t_ct
+INNER JOIN turno r_t
+  ON r_t.id_turno = t_ct.id_turno
+INNER JOIN ruta r
+  ON r.id_ruta = r_t.id_ruta
+INNER JOIN ayuda_auxiliar r_aa
+  ON r.id_ayuda = r_aa.id_ayuda
+WHERE TRUE
+AND t_ct.vehiculo = r_t.vehiculo
+ORDER BY t_ct.id_costo_turno DESC LIMIT 1;
+
+
+SELECT id_turno
+                    FROM turno t
+                    INNER JOIN rodamiento r_t
+                        ON r_t.numero_interno = t.vehiculo
+                    INNER JOIN vehiculo v_r
+                        ON r_t.numero_interno = v_r.numero_interno
+                    WHERE TRUE
+                        AND CURRENT_DATE::TIMESTAMP <= t.create_at
+                        AND t.vehiculo = num_vehiculo
+                        AND t.id_turno > ct_.id_turno
+                    ORDER BY t.id_turno limit 1
