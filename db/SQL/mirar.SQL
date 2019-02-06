@@ -208,18 +208,31 @@ AND t_r.vehiculo = 7118;
 
 
 SELECT
-  r.id_ayuda, r.id_ruta, r_aa.id_ayuda
+  r.id_ayuda, r.id_ruta
 FROM costo_turno t_ct
 INNER JOIN turno r_t
   ON r_t.id_turno = t_ct.id_turno
 INNER JOIN ruta r
   ON r.id_ruta = r_t.id_ruta
-INNER JOIN ayuda_auxiliar r_aa
-  ON r.id_ayuda = r_aa.id_ayuda
 WHERE TRUE
 AND t_ct.vehiculo = r_t.vehiculo
 ORDER BY t_ct.id_costo_turno DESC LIMIT 1;
 
+
+
+------------salario_id
+SELECT
+  s_r.valor_pago, r.id_ruta
+FROM costo_turno t_ct
+ INNER JOIN turno r_t
+   ON r_t.id_turno = t_ct.id_turno
+ INNER JOIN ruta r
+   ON r.id_ruta = r_t.id_ruta
+ INNER JOIN salario s_r
+   ON r.salario_id = s_r.salario_id
+WHERE TRUE
+ AND t_ct.vehiculo  = r_t.vehiculo
+ORDER BY t_ct.id_costo_turno ;
 
 SELECT id_turno
                     FROM turno t
