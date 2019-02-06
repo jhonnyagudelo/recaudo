@@ -31,7 +31,7 @@ turno_id:=(
   WHERE TRUE
     AND CURRENT_DATE::TIMESTAMP <= t.create_at
     AND t.vehiculo = num_vehiculo
-  ORDER BY t.id_turno DESC limit 1);
+  ORDER BY t.id_turno, t.hora_salida DESC limit 1);
   RAISE NOTICE 'El  NUMERO ID %', turno_id;
 
 
@@ -45,6 +45,23 @@ idcostoturno:=(
   AND CURRENT_DATE::TIMESTAMP <= c_t.create_at
 ORDER BY c_t.id_turno  DESC limit 1
 );
+
+----------------------UPDATE TURNO Y NUMERO TURNO
+UPDATE costo_turno SET id_turno = turno_id  WHERE id_costo_turno = idcostoturno;
+
+UPDATE costo_turno SET numero_turno  = (
+   SELECT
+  t.numero_turno
+  FROM turno t
+ INNER JOIN  costo_turno ct
+  ON t.id_turno = ct.id_turno
+  WHERE TRUE
+  AND CURRENT_DATE::TIMESTAMP <= ct.create_at
+   AND t.vehiculo =  num_vehiculo
+  ORDER BY t.id_turno, t.hora_salida DESC LIMIT 1 )
+WHERE id_costo_turno = idcostoturno;
+
+
 
 porcentaje:=(
   SELECT
@@ -73,21 +90,17 @@ costo:=(SELECT
           ORDER BY t.id_turno LIMIT 1);
 RAISE NOTICE 'El  costo por positivo es %', costo;
 
-idruta:=(
-SELECT
-  r.id_ayuda
-FROM costo_turno t_ct
-INNER JOIN turno r_t
-  ON r_t.id_turno = t_ct.id_turno
-INNER JOIN ruta r
-  ON r.id_ruta = r_t.id_ruta
-INNER JOIN ayuda_auxiliar r_aa
-  ON r.id_ayuda = r_aa.id_ayuda
-WHERE TRUE
-AND  num_vehiculo = r_t.vehiculo
-ORDER BY t_ct.vehiculo DESC LIMIT 1 );
-
-
+  idruta:=(
+    SELECT
+    r.id_ayuda
+    FROM ruta r
+    INNER JOIN turno t_r
+      ON r.id_ruta = t_r.id_ruta
+    INNER JOIN costo_turno t_c
+      ON t_r.id_turno = t_c.id_turno
+    WHERE TRUE
+      AND t_r.vehiculo = num_vehiculo
+    ORDER BY  t_r.id_turno, t_r.hora_salida DESC limit 1);
 
   idhelp:=(
     SELECT
@@ -100,7 +113,7 @@ ORDER BY t_ct.vehiculo DESC LIMIT 1 );
     INNER JOIN ayuda_auxiliar r_aa
       ON r.id_ayuda = r_aa.id_ayuda
     WHERE TRUE
-    AND  num_vehiculo = r_t.vehiculo
+    AND  t_ct.vehiculo = r_t.vehiculo
     ORDER BY t_ct.vehiculo DESC LIMIT 1 );
 
   auxiliary_help:= (
@@ -114,38 +127,20 @@ ORDER BY t_ct.vehiculo DESC LIMIT 1 );
     INNER JOIN ayuda_auxiliar r_aa
       ON r.id_ayuda = r_aa.id_ayuda
     WHERE TRUE
-    AND  num_vehiculo = r_t.vehiculo
+    AND  t_ct.vehiculo = r_t.vehiculo
     ORDER BY t_ct.vehiculo DESC LIMIT 1);
 
-
-      UPDATE costo_turno SET id_turno = turno_id  WHERE id_costo_turno = idcostoturno;
-
-      UPDATE costo_turno SET numero_turno  = (
-         SELECT
-        t.numero_turno
-        FROM turno t
-       INNER JOIN  costo_turno ct
-        ON t.id_turno = ct.id_turno
-        WHERE TRUE
-        AND CURRENT_DATE::TIMESTAMP <= ct.create_at
-	       AND t.vehiculo =  num_vehiculo
-         AND t.id_turno > ct.id_turno
-        ORDER BY t.id_turno )
-      WHERE id_costo_turno = idcostoturno;
-
-
-    -------------AYUDA AUXILIAR---------------------------
-CASE
-  WHEN (idruta = idhelp)
+-----------------------------------------UPDATE ----------------------------------------------------------------------------
+  --------------AYUDA AUXILIAR---------------------------
+  IF (idruta = idhelp)
    THEN
-    UPDATE costo_turno SET bea_neto = (bea_bruto - auxiliary_help)   WHERE id_costo_turno = idcostoturno;
+    UPDATE costo_turno SET bea_neto = (bea_bruto - auxiliary_help) WHERE id_costo_turno = idcostoturno;
     RAISE NOTICE 'ayuda_auxiliar %', auxiliary_help;
-ELSE
-  UPDATE costo_turno SET bea_neto=  bea_bruto   WHERE id_costo_turno = idcostoturno;
-END CASE;
+  ELSE
+  UPDATE costo_turno SET bea_neto =  bea_bruto   WHERE id_costo_turno = idcostoturno;
+  END IF;
 
   -------------FORMULA PARA ABORDADOS O POSITIVOS-------------------------
-
 
     formula:=(positivo * porcentaje) * costo;
           RAISE NOTICE 'el resultado es %', formula;

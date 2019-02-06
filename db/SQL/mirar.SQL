@@ -191,14 +191,20 @@ AND a.id = a_alias.id;
 
 
 SELECT
-r.id_ruta
+FROM ruta r
+INNER JOIN turno t
+ ON t
+
+
+SELECT
+r.id_ayuda
 FROM ruta r
 INNER JOIN turno t_r
   ON r.id_ruta = t_r.id_ruta
 INNER JOIN costo_turno t_c
   ON t_r.id_turno = t_c.id_turno
 WHERE TRUE
-AND t_r.vehiculo = c_t.vehiculo;
+AND t_r.vehiculo = 7118;
 
 
 SELECT
