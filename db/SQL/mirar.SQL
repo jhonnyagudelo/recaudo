@@ -235,13 +235,17 @@ WHERE TRUE
 ORDER BY t_ct.id_costo_turno ;
 
 SELECT id_turno
-                    FROM turno t
-                    INNER JOIN rodamiento r_t
-                        ON r_t.numero_interno = t.vehiculo
-                    INNER JOIN vehiculo v_r
-                        ON r_t.numero_interno = v_r.numero_interno
-                    WHERE TRUE
-                        AND CURRENT_DATE::TIMESTAMP <= t.create_at
-                        AND t.vehiculo = num_vehiculo
-                        AND t.id_turno > ct_.id_turno
-                    ORDER BY t.id_turno limit 1
+  FROM turno t
+  INNER JOIN rodamiento r_t
+      ON r_t.numero_interno = t.vehiculo
+  INNER JOIN vehiculo v_r
+      ON r_t.numero_interno = v_r.numero_interno
+  WHERE TRUE
+      AND CURRENT_DATE::TIMESTAMP <= t.create_at
+      AND t.vehiculo = num_vehiculo
+      AND t.id_turno > ct_.id_turno
+  ORDER BY t.id_turno limit 1
+
+
+
+selec

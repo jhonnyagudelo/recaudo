@@ -196,7 +196,7 @@ DECLARE
   EXECUTE PROCEDURE add_turn_time();
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
-CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
+CREATE OR REPLACE FUNCTION  cost_turn(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta

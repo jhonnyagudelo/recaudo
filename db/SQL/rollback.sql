@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
+CREATE OR REPLACE FUNCTION  cost_turn (pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta
@@ -22,6 +22,8 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
     VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, num_vehiculo);
     RAISE NOTICE 'ingreso valores con exitos';
 --------------------------------------- JOIN VARIABLES-------------------------------
+
+
 turno_id:=(
   SELECT
     t.id_turno
@@ -46,6 +48,16 @@ idcostoturno:=(
 ORDER BY c_t.id_turno  DESC limit 1
 );
 
+/* IF(num_vehiculo = 4000) THEN
+SELECT numero_interno FROM rodamiento WHERE numero_interno IN
+  (SELECT vehiculo FROM costo_turno WHERE id_turno = turno_id);
+  RAISE NOTICE 'El VEHICULO EXISTE %', vehiculo;
+
+  ELSE
+   RAISE EXCEPTION 'EL VEHICULO NO EXISTE: % ', vehiculo
+   USING HINT = 'EL VEHICULO INGRESADO NO EXISTE EN LA BD POR FAVOR VERIFICAR',
+   DETAIL = 'EL VEHICULO NO ESTA REGISTRADO INGRESELO EN EL RODAMIENTO O NO EXISTE EN LA BD ';
+END IF; */
 ----------------------UPDATE TURNO Y NUMERO TURNO
 UPDATE costo_turno SET id_turno = turno_id  WHERE id_costo_turno = idcostoturno;
 
