@@ -33,7 +33,7 @@ turno_id:=(
   WHERE TRUE
     AND CURRENT_DATE::TIMESTAMP <= t.create_at
     AND t.vehiculo = num_vehiculo
-  ORDER BY t.id_turno, t.hora_salida DESC limit 1);
+  ORDER BY t.id_turno DESC limit 1);
   RAISE NOTICE 'El  NUMERO ID %', turno_id;
 
 
@@ -48,16 +48,7 @@ idcostoturno:=(
 ORDER BY c_t.id_turno  DESC limit 1
 );
 
-/* IF(num_vehiculo = 4000) THEN
-SELECT numero_interno FROM rodamiento WHERE numero_interno IN
-  (SELECT vehiculo FROM costo_turno WHERE id_turno = turno_id);
-  RAISE NOTICE 'El VEHICULO EXISTE %', vehiculo;
 
-  ELSE
-   RAISE EXCEPTION 'EL VEHICULO NO EXISTE: % ', vehiculo
-   USING HINT = 'EL VEHICULO INGRESADO NO EXISTE EN LA BD POR FAVOR VERIFICAR',
-   DETAIL = 'EL VEHICULO NO ESTA REGISTRADO INGRESELO EN EL RODAMIENTO O NO EXISTE EN LA BD ';
-END IF; */
 ----------------------UPDATE TURNO Y NUMERO TURNO
 UPDATE costo_turno SET id_turno = turno_id  WHERE id_costo_turno = idcostoturno;
 
@@ -170,7 +161,7 @@ RAISE NOTICE 'El  costo por positivo es %', costo;
 
 
 
-SELECT spending_shift(30,0,15,0,97,100000,7118);
+SELECT cost_turn(30,0,15,0,97,100000,7118);
 
 select * from costo_turno;
 

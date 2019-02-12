@@ -7,6 +7,7 @@ WITH turn(turno_id) AS (
     ,t.id_ruta
     ,t.id_turno
     ,t_s.salario_id
+    ,t.hora_salida
     ,ct.bea_neto_total
           ,CASE
             WHEN t_s.valor_salario >= 1
@@ -25,11 +26,12 @@ WITH turn(turno_id) AS (
 	      ON t.id_turno = ct.id_turno
      WHERE TRUE
      AND ct.vehiculo = t.vehiculo
-      ORDER BY t.id_turno
+      ORDER BY t.id_turno, t.hora_salida DESC LIMIT 1
     )
     SELECT
     s.valor_salario
     ,s.salario_id
+    ,s.hora_salida
     ,s.id_ruta
     ,s.id_turno
     ,s.bea_neto_total

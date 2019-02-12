@@ -7,3 +7,4 @@ pg_dump -U postgres -v -F c recaudo_marcada < C:\Users\jhonn\Desktop\Coodetrans\
  psql -U postgres -h localhost
 
 
+11

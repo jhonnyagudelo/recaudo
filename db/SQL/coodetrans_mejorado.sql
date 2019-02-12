@@ -355,7 +355,7 @@ RAISE NOTICE 'El  costo por positivo es %', costo;
 -------------------------------------------------------------------------------------------------------------------------
 
 
-CREATE FUNCTION update_costo_ruta() RETURNS TRIGGER AS $$
+CREATE FUNCTION update_costo_turno() RETURNS TRIGGER AS $$
 DECLARE
 usuario varchar(20):=user;
 fecha date:= CURRENT_DATE;
@@ -371,9 +371,9 @@ $$ LANGUAGE PLPGSQL;
 
 
 
-CREATE TRIGGER update_costo AFTER UPDATE ON costo_ruta
+CREATE TRIGGER update_costo AFTER UPDATE ON costo_turno
 FOR EACH ROW
-EXECUTE PROCEDURE update_costo_ruta();
+EXECUTE PROCEDURE update_costo_turno();
 
 
 -------------------------------------------------------------------------------------------------------------------

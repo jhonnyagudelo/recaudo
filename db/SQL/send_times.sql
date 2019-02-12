@@ -2,9 +2,12 @@
 NEW.id_turno
 
 
-INSERT INTO tiempo (
+INSERT INTO gasto_turno (
 	id_turno
-	, tiempo_max
+	,conduce
+	,pago_conductor
+	,num_turno
+	,vehiculo
 )
 SELECT
 	NEW.id_turno
@@ -16,14 +19,18 @@ WHERE TRUE
 	AND r.id_ruta = NEW.id_ruta
 ;
 
+INSERT INTO
+
+
+
 
 
 
 ROLLBACK;
 BEGIN;
-INSERT INTO turno (
-	id_ruta
-	, numero_turno
+INSERT INTO gasto_turno (
+	id_turno
+	, num_turno
 )
 VALUES (
 	1

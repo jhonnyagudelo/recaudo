@@ -6,14 +6,8 @@ CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
  */
 
 DECLARE
-  horario_salida TIME;
-  numturno INT;
-  bus INT;
-  BEGIN
-  numturno:=(SELECT MAX(id_turno)FROM turno);
-  bus:=(SELECT vehiculo FROM turno WHERE id_turno = numturno);
-  horario_salida:=(SELECT hora_salida FROM turno WHERE id_turno = numturno);
 
+  BEGIN
     IF(TG_OP = 'UPDATE') THEN
     INSERT INTO tiempo (
       id_turno
