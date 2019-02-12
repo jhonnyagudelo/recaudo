@@ -196,7 +196,7 @@ DECLARE
   EXECUTE PROCEDURE add_turn_time();
 
 ------------------------------------------NUEVO CODIGO PARA COSTO RUTA-----------------------------------------------------
-CREATE OR REPLACE FUNCTION  cost_turn(pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
+CREATE OR REPLACE FUNCTION  cost_turn (pasajero int, auxiliare int,positivo int,bloqueo int,velocida int, beabruto DOUBLE precision,num_vehiculo INT)RETURNS void  AS $costo_turno$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta
@@ -214,23 +214,26 @@ CREATE OR REPLACE FUNCTION  cost_turn(pasajero int, auxiliare int,positivo int,b
   auxiliary_help DOUBLE PRECISION;
   formula DOUBLE PRECISION;
   BEGIN
-  ----- INSERT
 
+--------------------------------------- JOIN VARIABLES-------------------------------
+
+
+IF EXISTS(
+  SELECT v_c.numero_interno
+  FROM vehiculo v_c
+    INNER JOIN rodamiento v_r
+      ON v_c.numero_interno = v_r.numero_interno
+    INNER JOIN turno t
+      ON t.vehiculo = v_r.numero_interno
+  WHERE TRUE
+  AND v_c.numero_interno = num_vehiculo
+  ORDER BY id_rodamiento DESC LIMIT 1
+  ) THEN
   INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto, vehiculo)
     VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, num_vehiculo);
-    RAISE NOTICE 'ingreso valores con exitos';
---------------------------------------- JOIN VARIABLES-------------------------------
-turno_id:=(
-  SELECT
-    t.id_turno
-  FROM turno t
-    INNER JOIN costo_turno c_t
-    ON c_t.vehiculo = t.vehiculo
-  WHERE TRUE
-    AND CURRENT_DATE::TIMESTAMP <= t.create_at
-    AND t.vehiculo = num_vehiculo
-  ORDER BY t.id_turno, t.hora_salida DESC limit 1);
-  RAISE NOTICE 'El  NUMERO ID %', turno_id;
+  ELSE
+    RAISE NOTICE 'EL VEHICULO NO EXISTE, INGRESELO AL SISTEMA ';
+  END IF;
 
 
 idcostoturno:=(
@@ -244,8 +247,18 @@ idcostoturno:=(
 ORDER BY c_t.id_turno  DESC limit 1
 );
 
+
 ----------------------UPDATE TURNO Y NUMERO TURNO
-UPDATE costo_turno SET id_turno = turno_id  WHERE id_costo_turno = idcostoturno;
+UPDATE costo_turno SET id_turno = (
+  SELECT
+    t.id_turno
+  FROM turno t
+    INNER JOIN costo_turno c_t
+    ON c_t.vehiculo = t.vehiculo
+  WHERE TRUE
+    AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND t.vehiculo = num_vehiculo
+  ORDER BY t.id_turno DESC limit 1) WHERE id_costo_turno = idcostoturno;
 
 UPDATE costo_turno SET numero_turno  = (
    SELECT
@@ -352,6 +365,8 @@ RAISE NOTICE 'El  costo por positivo es %', costo;
     END IF;
     END;
   $costo_turno$ LANGUAGE plpgsql VOLATILE;
+
+
 -------------------------------------------------------------------------------------------------------------------------
 
 

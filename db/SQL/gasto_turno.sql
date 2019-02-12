@@ -19,7 +19,7 @@ BEGIN
     ,CASE
       WHEN s_r.valor_salario >= 1
         THEN s_r.valor_salario
-        ELSE ct_t.bea_neto_total * s_r.valor_salario
+        ELSE ct_t.bea_neto * s_r.valor_salario
       END AS pago_conductor
     ,ct_t.numero_turno
     ,ct_t.vehiculo
