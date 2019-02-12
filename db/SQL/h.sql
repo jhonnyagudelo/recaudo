@@ -11,7 +11,7 @@ WITH turn(turno_id) AS (
    ,CASE
     WHEN sr.valor_salario >= 1
       THEN sr.valor_salario
-      ELSE ct.bea_neto_total * sr.valor_salario
+      ELSE round( ct.bea_neto_total * sr.valor_salario)
     END AS pago_conductor
   ,ct.numero_turno
   ,ct.vehiculo

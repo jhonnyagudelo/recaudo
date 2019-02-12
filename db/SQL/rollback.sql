@@ -17,13 +17,6 @@ CREATE OR REPLACE FUNCTION  cost_turn (pasajero int, auxiliare int,positivo int,
   formula DOUBLE PRECISION;
   BEGIN
   ----- INSERT
-
-  /* INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto, vehiculo)
-    VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto, num_vehiculo);
-    RAISE NOTICE 'ingreso valores con exitos'; */
---------------------------------------- JOIN VARIABLES-------------------------------
-
-
 IF EXISTS(
   SELECT v_c.numero_interno
   FROM vehiculo v_c
@@ -41,6 +34,7 @@ IF EXISTS(
     RAISE NOTICE 'EL VEHICULO NO EXISTE, INGRESELO AL SISTEMA ';
   END IF;
 
+  --------------------------------------- JOIN VARIABLES-------------------------------
 
 idcostoturno:=(
   SELECT
@@ -175,11 +169,10 @@ RAISE NOTICE 'El  costo por positivo es %', costo;
 
 
 
+truncate costo_turno restart identity;
 SELECT cost_turn(30,0,15,0,97,100000,7118);
 
-select * from costo_turno;
 
 
 
-truncate costo_turno restart identity;
 select * from costo_turno;
