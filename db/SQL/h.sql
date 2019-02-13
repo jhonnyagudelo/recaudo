@@ -13,6 +13,7 @@ WITH turn(turno_id) AS (
       THEN sr.valor_salario
       ELSE round( ct.bea_neto_total * sr.valor_salario)
     END AS pago_conductor
+    
   ,ct.numero_turno
   ,ct.vehiculo
 FROM turn tn

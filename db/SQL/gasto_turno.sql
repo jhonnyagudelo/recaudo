@@ -5,6 +5,7 @@ BEGIN
   INSERT INTO gasto_turno(
     id_turno
     ,conduce
+    ,descuento
     ,pago_conductor
     ,num_turno
     ,vehiculo
@@ -15,6 +16,10 @@ BEGIN
           WHEN r.tasa_id = r_t.tasa_id
             THEN  r_t.precio
         END AS conduce
+    ,CASE
+          WHEN r.descuento_id = r_d.descuento_id
+            THEN  r_d.precio_unico
+        END AS descuento
 
     ,CASE
       WHEN s_r.valor_salario >= 1
@@ -33,6 +38,8 @@ INNER JOIN salario s_r
   ON  r.salario_id = s_r.salario_id
 LEFT JOIN tasa r_t
   ON r.tasa_id = r_t.tasa_id
+LEFT JOIN descuento r_d
+  ON r.descuento_id = r_d.descuento_id
 INNER JOIN costo_turno ct_t
     ON t.id_turno = ct_t.id_turno
 
@@ -46,7 +53,7 @@ INNER JOIN costo_turno ct_t
  END;
  $$ LANGUAGE PLPGSQL VOLATILE;
 
- CREATE  TRIGGER insert_gasto_turn
+ CREATE TRIGGER insert_gasto_turn
  AFTER UPDATE ON costo_turno
  FOR EACH ROW
  EXECUTE PROCEDURE add_trigg_shift_expense();
