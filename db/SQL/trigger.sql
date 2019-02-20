@@ -8,8 +8,8 @@ CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
 DECLARE
 
   BEGIN
-    IF(TG_OP = 'UPDATE') THEN
-    INSERT INTO tiempo (
+    IF(TG_OP = 'INSERT') THEN
+    INSERT INTO tiempos (
       id_turno
       ,tiempo_max
       ,nombre_marcada
@@ -26,14 +26,14 @@ DECLARE
        END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
-    FROM turno t
-      INNER JOIN ruta r
+    FROM turnos t
+      INNER JOIN rutas r
         ON t.id_ruta = r.id_ruta
-      INNER JOIN ruta_reloj rr_r
+      INNER JOIN ruta_relojes rr_r
         ON t.id_ruta = rr_r.id_ruta
-      LEFT JOIN tiempo_extra t_e
+      LEFT JOIN tiempo_adicional t_e
         ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
-      INNER JOIN reloj rl
+      INNER JOIN relojes rl
         ON rr_r.id_reloj = rl.id_reloj
     WHERE TRUE
       AND t.id_turno = NEW.id_turno
@@ -42,3 +42,8 @@ DECLARE
   RETURN NEW;
   END;
   $_time$ LANGUAGE plpgsql;
+
+  CREATE TRIGGER after_insert_turn
+  AFTER INSERT ON turnos
+  FOR EACH ROW
+  EXECUTE PROCEDURE add_turn_time();

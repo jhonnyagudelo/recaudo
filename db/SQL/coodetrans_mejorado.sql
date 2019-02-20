@@ -11,9 +11,11 @@ numturno INT;
 nombre_ruta varchar(30);
 BEGIN
 
-INSERT INTO turno( vehiculo,id_ruta,numero_turno,hora_salida, mensaje) VALUES ( num_vehiculo, ruta, num_turno,salida, mensaje);
+-- CREATE TYPE estado AS ENUM ('Pendiente','Transito','Terminado')
+
+INSERT INTO turnos( vehiculo,id_ruta,numero_turno,hora_salida, mensaje) VALUES ( num_vehiculo, ruta, num_turno,salida, mensaje);
 RAISE NOTICE 'INGRESARON LOS DATOS CON EXITO';
-BEGIN
+
 
 numturno:=(SELECT id_turno
         FROM turno t
@@ -36,7 +38,8 @@ UPDATE turno SET rodamiento = (
   INNER JOIN rodamiento r_t
  	ON r_t.numero_interno = t.vehiculo
   WHERE TRUE
-  AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    AND CURRENT_DATE::TIMESTAMP <= r_t.create_at
     AND t.create_at > r_t.create_at
     AND t.vehiculo = r_t.numero_interno
   ORDER BY  r_t.id_rodamiento DESC limit 1
@@ -46,72 +49,10 @@ UPDATE turno SET rodamiento = (
 RAISE NOTICE 'El vehiculo de esta ruta es %', num_vehiculo;
 RAISE NOTICE 'El numero de turno es %', num_turno;
 RAISE NOTICE 'El en la ruta %', nombre_ruta;
-END;
+
 END;
 $$ LANGUAGE plpgsql VOLATILE;
 
-
------------------------------------------------------------------------------------------------------------
-
--- funcional
- ROLLBACK;
-BEGIN;
-WITH valor (id_turno, hora_salida) AS (
-  VALUES (9, '09:57:00'::TIME)
-)
-, reloj AS (
-  SELECT
-    rr_r.*
-    , rr_v.nombre_reloj
-    , v.hora_salida
-  FROM valor v
-    INNER JOIN tiempo tp
-      ON tp.id_turno = v.id_turno
-    INNER JOIN turno tr
-      ON tp.id_turno = tr.id_turno
-    INNER JOIN ruta r
-      ON tr.id_ruta = r.id_ruta
-    INNER JOIN ruta_reloj rr_r
-      ON rr_r.id_ruta = r.id_ruta
-    INNER JOIN reloj rr_v
-   ON rr_r.id_reloj = rr_v.id_reloj
-  WHERE TRUE
-  ORDER BY id_ruta
-)
-SELECT
-  v.nombre_reloj
-  ,v.hora_salida + ( v.tiempo_max || 'minute')::INTERVAL
-FROM reloj v;
------------------------------------------------------------------------------------------------------------------------
-
-
-
-  ---TURNO A TIEMPO TRIIGER
-SELECT t.id_ruta FROM ruta_reloj rr_r
-  INNER JOIN ruta r
-    ON rr_r.id_ruta = r.id_ruta
-  INNER JOIN turno t
-    ON t.id_ruta = r.id_ruta
-  WHERE
-    t.id_turno = 1;
-
---------------------------------------------------------------------------------------------------------------------
-
--- busqueda de ruta por id_turno
-WITH num_turno(turno) AS (
-  VALUES (2)),
-turno AS
-(SELECT t.*
-  ,t_r.turno
-  ,r_t.nombre
-  FROM num_turno t_r
-  INNER JOIN turno t ON t.id_turno = t_r.turno
-  INNER JOIN ruta r_t ON r_t.id_ruta = t.id_ruta
-  INNER JOIN ruta_reloj rr_r ON r_t.id_ruta = rr_r.id_ruta
-  WHERE TRUE)
-SELECT
-  t_r.turno
-FROM turno t_r;
 
 -------------------------------------------------------------------------
 -- numero de caida
@@ -126,15 +67,15 @@ DECLARE
     tiempomax TIME;
     caida INT;
   BEGIN
-  tiempomax:=(SELECT tiempo_max FROM tiempo WHERE id_tiempo = idtiempo);
+  tiempomax:=(SELECT tiempo_max FROM tiempos WHERE id_tiempo = idtiempo);
 
-  UPDATE tiempo SET tiempo_marcada = time_marked WHERE id_tiempo = idtiempo;
+  UPDATE tiempos SET tiempo_marcada = time_marked WHERE id_tiempo = idtiempo;
   RAISE NOTICE 'ingreso el tiempo  ------>%', time_marked;
-  BEGIN
-  UPDATE tiempo SET numero_caida =  (SELECT EXTRACT( MINUTE FROM tiempo_marcada - (tiempomax)))
+
+  UPDATE tiempos SET numero_caida =  (SELECT EXTRACT( MINUTE FROM tiempo_marcada - (tiempomax)))
                                       WHERE id_tiempo = idtiempo;
   -- RAISE NOTICE 'se cayo con   ------>% minutos', numero_caida;
-  END;
+
   END;
   $marcada$ LANGUAGE plpgsql;
 ----------------------------------------------------------------------------------------------------
@@ -147,16 +88,11 @@ CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
  */
 
 DECLARE
-  horario_salida TIME;
-  numturno INT;
-  bus INT;
+
   BEGIN
-  numturno:=(SELECT MAX(id_turno)FROM turno);
-  bus:=(SELECT vehiculo FROM turno WHERE id_turno = numturno);
-  horario_salida:=(SELECT hora_salida FROM turno WHERE id_turno = numturno);
 
     IF(TG_OP = 'UPDATE') THEN
-    INSERT INTO tiempo (
+    INSERT INTO tiempos (
       id_turno
       ,tiempo_max
       ,nombre_marcada
@@ -174,13 +110,13 @@ DECLARE
        ,nombre_reloj
        ,vehiculo
     FROM turno t
-      INNER JOIN ruta r
+      INNER JOIN rutas r
         ON t.id_ruta = r.id_ruta
-      INNER JOIN ruta_reloj rr_r
+      INNER JOIN ruta_relojes rr_r
         ON t.id_ruta = rr_r.id_ruta
-      LEFT JOIN tiempo_extra t_e
+      LEFT JOIN tiempo_adicional t_e
         ON t_e.ruta_reloj_id = rr_r.id_ruta_reloj
-      INNER JOIN reloj rl
+      INNER JOIN relojes rl
         ON rr_r.id_reloj = rl.id_reloj
     WHERE TRUE
       AND t.id_turno = NEW.id_turno
@@ -214,10 +150,7 @@ CREATE OR REPLACE FUNCTION  cost_turn (pasajero int, auxiliare int,positivo int,
   auxiliary_help DOUBLE PRECISION;
   formula DOUBLE PRECISION;
   BEGIN
-
---------------------------------------- JOIN VARIABLES-------------------------------
-
-
+  ----- INSERT
 IF EXISTS(
   SELECT v_c.numero_interno
   FROM vehiculo v_c
@@ -234,6 +167,20 @@ IF EXISTS(
   ELSE
     RAISE NOTICE 'EL VEHICULO NO EXISTE, INGRESELO AL SISTEMA ';
   END IF;
+
+  --------------------------------------- JOIN VARIABLES-------------------------------
+   INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto, vehiculo)
+    SELECT (pasajero, auxiliare, positivo, bloqueo, velocida, beabruto
+         ,num_vehiculo
+          FROM vehiculo v_r
+            INNER JOIN rodamiento r_ct
+              ON v_r.numero_interno = r_ct.numero_interno
+            INNER JOIN turno r_t
+              ON r_t.rodamiento = r_ct.id_rodamiento
+            INNER JOIN ruta rr_t
+              ON rr_t.id_ruta = r_t.id_ruta
+          WHERE TRUE
+          AND r_ct.numero_interno = num_vehiculo)) RETURNing *;
 
 
 idcostoturno:=(
@@ -256,20 +203,21 @@ UPDATE costo_turno SET id_turno = (
     INNER JOIN costo_turno c_t
     ON c_t.vehiculo = t.vehiculo
   WHERE TRUE
-    AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    /* AND CURRENT_DATE::TIMESTAMP <= t.create_at */
     AND t.vehiculo = num_vehiculo
-  ORDER BY t.id_turno DESC limit 1) WHERE id_costo_turno = idcostoturno;
+  ORDER BY t.id_turno DESC limit 1)
+WHERE id_costo_turno = idcostoturno;
 
-UPDATE costo_turno SET numero_turno  = (
+ UPDATE costo_turno SET numero_turno  = (
    SELECT
   t.numero_turno
   FROM turno t
  INNER JOIN  costo_turno ct
   ON t.id_turno = ct.id_turno
   WHERE TRUE
-  AND CURRENT_DATE::TIMESTAMP <= ct.create_at
+  /* AND CURRENT_DATE::TIMESTAMP <= ct.create_at */
    AND t.vehiculo =  num_vehiculo
-  ORDER BY t.id_turno, t.hora_salida DESC LIMIT 1 )
+  ORDER BY  t.hora_salida DESC LIMIT 1 )
 WHERE id_costo_turno = idcostoturno;
 
 

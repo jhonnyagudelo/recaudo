@@ -200,7 +200,7 @@ DECLARE
   EXECUTE PROCEDURE add_turn_time();
 
 
-----------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------
 ---con vehiculo
 CREATE OR REPLACE FUNCTION add_turn_time() RETURNS TRIGGER AS $_time$
 DECLARE
@@ -637,3 +637,80 @@ CREATE OR REPLACE FUNCTION  spending_shift(pasajero int, auxiliare int,positivo 
   END;
   END;
   $costo_turno$ LANGUAGE plpgsql VOLATILE;
+
+
+  -------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------------------
+
+-- funcional
+ ROLLBACK;
+BEGIN;
+WITH valor (id_turno, hora_salida) AS (
+  VALUES (9, '09:57:00'::TIME)
+)
+, reloj AS (
+  SELECT
+    rr_r.*
+    , rr_v.nombre_reloj
+    , v.hora_salida
+  FROM valor v
+    INNER JOIN tiempo tp
+      ON tp.id_turno = v.id_turno
+    INNER JOIN turno tr
+      ON tp.id_turno = tr.id_turno
+    INNER JOIN ruta r
+      ON tr.id_ruta = r.id_ruta
+    INNER JOIN ruta_reloj rr_r
+      ON rr_r.id_ruta = r.id_ruta
+    INNER JOIN reloj rr_v
+   ON rr_r.id_reloj = rr_v.id_reloj
+  WHERE TRUE
+  ORDER BY id_ruta
+)
+SELECT
+  v.nombre_reloj
+  ,v.hora_salida + ( v.tiempo_max || 'minute')::INTERVAL
+FROM reloj v;
+-----------------------------------------------------------------------------------------------------------------------
+
+
+
+  ---TURNO A TIEMPO TRIIGER
+SELECT t.id_ruta FROM ruta_reloj rr_r
+  INNER JOIN ruta r
+    ON rr_r.id_ruta = r.id_ruta
+  INNER JOIN turno t
+    ON t.id_ruta = r.id_ruta
+  WHERE
+    t.id_turno = 1;
+
+--------------------------------------------------------------------------------------------------------------------
+
+-- busqueda de ruta por id_turno
+WITH num_turno(turno) AS (
+  VALUES (2)),
+turno AS
+(SELECT t.*
+  ,t_r.turno
+  ,r_t.nombre
+  FROM num_turno t_r
+  INNER JOIN turno t ON t.id_turno = t_r.turno
+  INNER JOIN ruta r_t ON r_t.id_ruta = t.id_ruta
+  INNER JOIN ruta_reloj rr_r ON r_t.id_ruta = rr_r.id_ruta
+  WHERE TRUE)
+SELECT
+  t_r.turno
+FROM turno t_r;
+---------------------
+numturno:=(SELECT id_turno
+        FROM turno t
+          INNER JOIN rodamiento r_t
+            ON r_t.numero_interno = t.vehiculo
+          INNER JOIN vehiculo v_r
+            ON r_t.numero_interno = v_r.numero_interno
+        WHERE TRUE
+          AND CURRENT_DATE::TIMESTAMP <= t.create_at
+          AND t.vehiculo = num_vehiculo
+          AND numero_turno = num_turno
+        ORDER BY r_t.id_rodamiento DESC limit 1);

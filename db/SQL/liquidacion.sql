@@ -1,5 +1,5 @@
 WITH turn(turno_id) AS (
-  values(1)
+  values(2)
   )
   ,hola AS (
   SELECT
@@ -35,6 +35,7 @@ WITH turn(turno_id) AS (
 
   ,ct.numero_turno
   ,ct.vehiculo
+  ,ct.bea_neto
   ,r_c.precio_galon
   ,v_t.consumo_galon
   ,r.kilometros
@@ -63,21 +64,23 @@ ON r_c.combustible_id = r.combustible_id
 INNER JOIN costo_turno ct
   ON t.id_turno = ct.id_turno
 WHERE TRUE
+AND ct.id_turno = t.id_turno
 ORDER BY ct.id_turno
 )
+
 ,suma_gasto AS (
   SELECT
     h.*
-    ,((
+    ,(
       h.pago_conductor
       + h.conduce
       + h.descuento
-      + h.peaje) + COALESCE(ct_h.bea_neto,0)
-      ) AS liquidar
+      + h.peaje
+      ) AS total_gasto
 
     FROM hola h
       INNER JOIN gasto_turno gt_h
-        ON h.id_turno = gt_h.gasto_id
+        ON h.id_turno = gt_h.id_turno
       INNER JOIN costo_turno ct_h
         ON ct_h.id_turno = gt_h.id_turno
       WHERE TRUE
@@ -85,60 +88,40 @@ ORDER BY ct.id_turno
       AND h.numero_turno = gt_h.num_turno
       GROUP BY h.id_turno, h.pago_conductor, h.conduce, h.descuento,
       h.combustible,h.peaje
-        ,h.numero_turno
-  ,h.vehiculo
-  ,h.precio_galon
-  ,h.consumo_galon
-  ,h.kilometros
-  ,ct_h.bea_neto
+      ,h.numero_turno
+      ,h.vehiculo
+      ,h.precio_galon
+      ,h.consumo_galon
+      ,h.kilometros
+      ,h.bea_neto
 
+)
+,liquidar AS (
+  SELECT
+      sg.id_turno,
+      sg.pago_conductor,
+      sg.conduce,
+      sg.descuento
+      ,sg.combustible
+      ,sg.peaje
+      ,sg.numero_turno
+      ,sg.vehiculo
+      ,sg.precio_galon
+      ,sg.consumo_galon
+      ,sg.kilometros
+      ,sg.bea_neto
+    ,h.bea_neto - COALESCE(sg.total_gasto,0) AS liquidar
+
+  FROM suma_gasto sg, hola h
   )
 
 SELECT
-sg.id_turno
-,sg.pago_conductor
-,sg.numero_turno
-,sg.conduce
-,sg.descuento
-,sg.peaje
-,sg.vehiculo
+lq.id_turno
+,lq.pago_conductor
+,lq.numero_turno
+,lq.conduce
+,lq.descuento
+,lq.peaje
+,lq.vehiculo
 ,liquidar
-FROM suma_gasto sg;
------------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION add_collection() RETURNS TRIGGER AS $$
-BEGIN
-  IF (TG_OP = 'UPDATE') THEN
-    INSERT INTO recaudo_turno(
-        id_turno
-        ,num_turno
-        ,fecha_rodamiento
-        ,hora_despacho
-        ,valor_total
-        ,peaje
-        ,otros
-        ,descuento
-        ,combustible
-        ,despacho
-        ,saldo_asociado
-        ,bloqueos
-        ,exentos
-        ,velocidad
-        ,pago_conductor
-        ,descripcion
-        ,pasajeros
-        ,conduce
-        ,liquidar
-      )
-    SELECT
-    NEW.id_turno
-
-
-
-    FROM turno
-    INNER JOIN
-
-
-
-
-
-
+FROM liquidar lq;

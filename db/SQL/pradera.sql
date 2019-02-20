@@ -46,7 +46,7 @@ WITH turn(id_turno) AS (
 							) AS total_caida
 
     ,CASE
-				WHEN tp.nombre_marcada = 'Albeiro'
+				WHEN tp.nombre_marcada = 'Albeiro'    /*hacer busqueda por like*/
   					THEN
 							(CASE
 								WHEN tp.numero_caida >=1

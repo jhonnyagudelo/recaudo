@@ -35,6 +35,21 @@ IF EXISTS(
   END IF;
 
   --------------------------------------- JOIN VARIABLES-------------------------------
+  /* INSERT INTO costo_turno( pasajeros, auxiliares, positivos, bloqueos, velocidad, bea_bruto, vehiculo)
+    VALUES(pasajero, auxiliare, positivo, bloqueo, velocida, beabruto,
+        (SELECT num_vehiculo
+          FROM vehiculo v_r
+            INNER JOIN rodamiento r_ct
+              ON v_r.numero_interno = r_ct.numero_interno
+            INNER JOIN turno r_t
+              ON r_t.rodamiento = r_ct.id_rodamiento
+            INNER JOIN ruta rr_t
+              ON rr_t.id_ruta = r_t.id_ruta
+          WHERE TRUE
+          AND r_ct.numero_interno = num_vehiculo));
+
+          COMMIT; */
+
 
 idcostoturno:=(
   SELECT
@@ -56,7 +71,7 @@ UPDATE costo_turno SET id_turno = (
     INNER JOIN costo_turno c_t
     ON c_t.vehiculo = t.vehiculo
   WHERE TRUE
-    AND CURRENT_DATE::TIMESTAMP <= t.create_at
+    /* AND CURRENT_DATE::TIMESTAMP <= t.create_at */
     AND t.vehiculo = num_vehiculo
   ORDER BY t.id_turno DESC limit 1) WHERE id_costo_turno = idcostoturno;
 
@@ -67,7 +82,7 @@ UPDATE costo_turno SET numero_turno  = (
  INNER JOIN  costo_turno ct
   ON t.id_turno = ct.id_turno
   WHERE TRUE
-  AND CURRENT_DATE::TIMESTAMP <= ct.create_at
+  /* AND CURRENT_DATE::TIMESTAMP <= ct.create_at */
    AND t.vehiculo =  num_vehiculo
   ORDER BY t.id_turno, t.hora_salida DESC LIMIT 1 )
 WHERE id_costo_turno = idcostoturno;
@@ -167,10 +182,11 @@ RAISE NOTICE 'El  costo por positivo es %', costo;
   $costo_turno$ LANGUAGE plpgsql VOLATILE;
 
 
-
-
 truncate costo_turno restart identity;
+
+
 SELECT cost_turn(30,0,15,0,97,100000,7118);
+truncate costo_turno restart identity;
 
 
 

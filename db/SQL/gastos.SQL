@@ -1,15 +1,17 @@
-CREATE OR REPLACE FUNCTION deduction (transfer DOUBLE PRECISION, aforista DOUBLE PRECISION, otro DOUBLE PRECISION, pago_peaje INT) RETURNS VOID AS $gasto_turno$
-DECLARE
-
+CREATE OR REPLACE FUNCTION deduction (transfer DOUBLE PRECISION, aforista DOUBLE PRECISION, otro DOUBLE PRECISION, mensaje VARCHAR DEFAULT 'Sin novedad') RETURNS VOID AS $gasto_turno$
 BEGIN
 
-
-UPDATE gasto_turno SET transbordo = transfer
+UPDATE gasto_turno
+SET
+transbordo = transfer
 ,pasaje_aforista = aforista
 ,otros = otro
-,peaje = pago_peaje
-WHERE TRUE
+,descripcion = mensaje
+WHERE
 
 RAISE NOTICE 'INGRESARON LOS DATOS CON EXITOS';
-$gasto_turno$;
-LANGUAGE plpgsql VOLATILE;
+END;
+$gasto_turno$ LANGUAGE PLPGSQL VOLATILE;
+
+
+
