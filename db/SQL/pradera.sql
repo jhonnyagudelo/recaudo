@@ -16,7 +16,7 @@ WITH turn(id_turno) AS (
 		, coalesce((
 						SELECT
 						  EXTRACT(MINUTES FROM t.hora_salida - t_1.hora_salida)
-						FROM turno t_1
+						FROM turnos t_1
 					 	WHERE TRUE
 					 		AND CURRENT_DATE::TIMESTAMP <= t_1.create_at
 					 		AND t_1.hora_salida < t.hora_salida
@@ -24,7 +24,7 @@ WITH turn(id_turno) AS (
 					 	limit 1
 					),7) AS diferencia
 	FROM turn tn
-		INNER JOIN turno t
+		INNER JOIN turnos t
 			ON t.id_turno = tn.id_turno
 )
 
@@ -85,7 +85,7 @@ WITH turn(id_turno) AS (
 		END AS cancelar
 
 		FROM data_turno t
-		INNER JOIN tiempo tp
+		INNER JOIN tiempos tp
 			ON tp.id_turno = t.id_turno
 		INNER JOIN turn tn
 			 ON tp.id_turno = tn.id_turno

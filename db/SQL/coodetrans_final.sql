@@ -102,7 +102,7 @@ DECLARE
   END;
   $marcada$ LANGUAGE plpgsql;
   -----------------------INSERTAR VALORES TURNOS-------------------------
-CREATE OR REPLACE FUNCTION update_values_turns(passenger INT,auxiliary INT,positive INT,bloking INT,speed INT,bea DOUBLE PRECISION, vehicle INT) RETURNS VOID AS $update_turn$
+CREATE OR REPLACE FUNCTION update_turns(passenger INT,auxiliary INT,positive INT,bloking INT,speed INT,bea DOUBLE PRECISION, vehicle INT) RETURNS VOID AS $update_turn$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta
@@ -110,8 +110,23 @@ CREATE OR REPLACE FUNCTION update_values_turns(passenger INT,auxiliary INT,posit
  */
 DECLARE
 BEGIN
+WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+AS(
+VALUES
+  (passenger, auxiliary, positive, bloking, speed, bea, vehicle)
+),updated_at AS(
 
-
+UPDATE turnos SET
+    pasajero = passenger
+    ,auxiliar =auxiliary
+    ,positivo = positive
+    ,bloqueo = bloking
+    ,velocidad = speed
+    ,bea_bruto = bea
+    ,vehiculo = vehicle
+    RETURNING id_turno
+)
+SELECT * FROM turnos WHERE id_turno IN (SELECT id_turno FROM updated_at );
 END;
 $update_turn$ LANGUAGE plpgsql VOLATILE;
 
@@ -142,10 +157,12 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
         WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
         (CASE WHEN t.positivo >= t_rt.num_positivo
             THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
-              ELSE 0 END ) END AS costo_positivo
+          ELSE 0 END ) END AS costo_positivo
 
      ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
+        -- SAVEPOINT positivo;
      -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
+
      ,t.vehiculo
      ,t.numero_turno
     FROM turnos t
@@ -156,7 +173,7 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
     LEFT JOIN  tarifa_positivos t_rt
       ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
     WHERE TRUE
-    AND t.id_turno = NEW.id_turno;
+    AND t.id_turno = NEW.id_turno
   END IF;
   RETURN NEW;
   END;
@@ -168,17 +185,164 @@ CREATE TRIGGER after_cost_turn
   EXECUTE PROCEDURE trigg_shift_cost();
 
 -----------------------------------------gasto_turno--------------------------------------------------------
-CREATE OR REPLACE FUNCTION trigg_shift_expense() RETURNS TRIGGER $gasto_turno$
+
+
+/*si actualiza el precio no cambia el resultado de pago condictor*/
+
+
+CREATE OR REPLACE FUNCTION trigg_shift_expense() RETURNS TRIGGER AS $gasto_turno$
   /*
    * Author: Jhonny Stiven Agudelo Tenorio
    * Purpose: Costo ruta
    * statement in PostgreSQL.
    */
 BEGIN
-  IF(TG_OP='UPDATE')
-    INSERT INTO gasto_turno(
-
+  IF(TG_OP='INSERT') THEN
+    INSERT INTO gasto_turnos(
+      id_turno
+      ,num_turno
+      ,peaje
+      ,pago_conductor
+      ,descuento
+      ,conduce
+      ,combustible
+      ,vehiculo
       )
+      SELECT
+      NEW.id_turno
+
+      ,t.numero_turno
+
+      ,COALESCE(p_r.precio_peaje, 0) AS peaje
+
+      ,CASE WHEN s_r.valor_salario >= 1
+        THEN s_r.valor_salario
+          ELSE ct_t.bea_neto * s_r.valor_salario
+      END AS pago_conductor
+
+      ,COALESCE(r_d.precio_unico, 0) AS descuento
+
+      ,COALESCE(r_t.precio, 0) AS conduce
+
+      ,CASE WHEN r.combustible_id = r_c.combustible_id
+        THEN ROUND(r.kilometros / v_t.consumo_galon::double precision) * r_c.precio_galon
+          ELSE 0
+      END AS combustible
+
+      ,t.vehiculo
+
+      FROM turnos t
+          INNER JOIN costo_turnos ct_t
+            ON  t.id_turno = ct_t.id_turno
+          INNER JOIN rodamientos rr_t
+            ON t.rodamiento_id = rr_t.id_rodamiento
+          INNER JOIN vehiculos v_t
+            ON rr_t.numero_interno = v_t.numero_interno
+          INNER JOIN rutas r
+            ON t.id_ruta = r.id_ruta
+          INNER JOIN salarios s_r
+            ON  r.salario_id = s_r.salario_id
+          LEFT JOIN tasa r_t
+            ON r.tasa_id = r_t.tasa_id
+          LEFT JOIN descuentos r_d
+            ON r.descuento_id = r_d.descuento_id
+          INNER JOIN combustibles r_c
+            ON r_c.combustible_id = r.combustible_id
+          LEFT JOIN peajes p_r
+            ON r.peaje_id = p_r.id_peaje
+WHERE TRUE
+    AND t.id_turno = NEW.id_turno
+ORDER BY t.id_turno DESC LIMIT 1;
+END IF;
+RETURN NEW;
+END;
+$gasto_turno$ LANGUAGE plpgsql VOLATILE;
+
+
+ CREATE TRIGGER insert_gasto_turn
+ AFTER INSERT ON costo_turnos
+ FOR EACH ROW
+ EXECUTE PROCEDURE trigg_shift_expense();
+
+ CREATE TRIGGER updated_gasto_turn
+ BEFORE UPDATE ON costo_turnos
+ FOR EACH ROW
+ WHEN (OLD.pago_conductor IS DISTINCT FROM NEW.pago_conductor)
+ EXECUTE PROCEDURE trigg_shift_expense();
+
+ ---------------------------------------liquidacion_turno-------------------------------------------------
+CREATE OR REPLACE FUNCTION payment_turn() RETURNS TRIGGER AS $liquidacion_turno$
+  /*
+   * Author: Jhonny Stiven Agudelo Tenorio
+   * Purpose: Costo ruta
+   * statement in PostgreSQL.
+   */
+BEGIN
+IF(TG_OP='INSERT') THEN
+  INSERT INTO recaudo_turnos(
+    ,id_turno
+    ,num_turno
+    ,valor_total
+    ,valor_bea
+    ,peaje
+    ,otros
+    ,descuento
+    ,combustible
+    ,bloqueos
+    ,exentos
+    ,velocidad
+    ,pago_conductor
+    ,descripcion
+    ,pasajero
+    ,conduce
+    ,liquidar
+    ,saldo_asociado
+    ,bonificacion
+    )
+    SELECT
+    NEW.id_turno
+    ,t.numero_turno
+    ,COALESCE(
+            t_ct.bea_neto + t_ct.costo_positivo, 0
+      )AS valor_total
+    ,t_ct.bea_neto
+    ,t_gt.peaje
+    ,t_gt.otros
+    ,t_gt.descuento
+    ,t_gt.combustible
+    ,t.bloqueo
+    ,t.auxiliar
+    ,t.velocidad
+    ,t_gt.pago_conductor
+    ,t_gt.descripcion
+    ,t.pasajeros
+    ,t_gt.conduce
+    ,SUM(COALESCE(t_ct.peaje, 0) +
+        COALESCE(t_ct.otros, 0) +
+        COALESCE(t_ct.descuento, 0) +
+        COALESCE(t_ct.pago_conductor, 0) +
+        COALESCE(t_ct.conduce, 0)) AS liquidar
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

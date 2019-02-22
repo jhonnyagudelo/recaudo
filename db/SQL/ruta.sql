@@ -1,7 +1,7 @@
 WITH turn(turno_id) AS (
   VALUES(2)
   )
-,consulta AS(
+,Z AS(
   SELECT
     t.id_turno
     ,t.numero_turno

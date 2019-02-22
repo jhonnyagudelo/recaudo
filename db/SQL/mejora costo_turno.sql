@@ -149,7 +149,7 @@ WITH upsert AS
               ,positivo = 6
               ,bloqueo = 1
               ,velocidad = 97
-              ,bea_bruto = 97000
+              ,bea_bruto = 000
               ,vehiculo = 7118
             FROM update_turns u_ts
               INNER JOIN turnos t
@@ -176,7 +176,7 @@ WITH upsert AS
 
 
 
-    WITH update_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+    WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
       AS(
         VALUES
             (passenger, auxiliary, positive, bloking, speed, bea, vehicle)
@@ -190,12 +190,138 @@ WITH upsert AS
               ,velocidad = speed
               ,bea_bruto = bea
               ,vehiculo = vehicle
+              )
             FROM updated_turns u_ts
               INNER JOIN turnos t
                 ON u_ts.vehicle = t.vehiculo
+              INNER JOIN rodamiento t_rt
+                ON t.vehiculo = t_rt.numero_interno
               WHERE TRUE
               AND CURRENT_DATE::TIMESTAMP <= t.create_at
-              RETURNING  u_ts.*
-              )
+              AND t_rt.numero_interno = vehicle
+              AND
+              RETURNING turnos *
+
           INSERT INTO turnos (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+
+
+
+
+
+           UPDATE turnos
+              SET pasajero = 37
+              ,auxiliar =1
+              ,positivo = 6
+              ,bloqueo = 1
+              ,velocidad = 97
+              ,bea_bruto =179750
+              ,vehiculo = 7118
+              WHERE TRUE
+              AND id_turno =1
+              AND vehiculo = 7118
+            RETURNING
+            id_turno
+            ,vehiculo
+            ,numero_turno;
+
+
+
+
+    WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+      AS(
+        VALUES
+            (passenger, auxiliary, positive, bloking, speed, bea, vehicle)
+        )
+          ,updated_at AS(
+
+         UPDATE turnos SET
+              pasajero = passenger
+              ,auxiliar =auxiliary
+              ,positivo = positive
+              ,bloqueo = bloking
+              ,velocidad = speed
+              ,bea_bruto = bea
+              ,vehiculo = vehicle
+              FROM
+              RETURNING turnos *
+
+              )
+            FROM updated_turns u_ts
+              INNER JOIN turnos t
+                ON u_ts.vehicle = t.vehiculo
+              INNER JOIN rodamiento t_rt
+                ON t.vehiculo = t_rt.numero_interno
+              WHERE TRUE
+              AND CURRENT_DATE::TIMESTAMP <= t.create_at
+              AND t_rt.numero_interno = vehicle
+              AND
+
+
+
+
+
+
+
+
+
+    WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+      AS(
+        VALUES
+            (passenger, auxiliary, positive, bloking, speed, bea, vehicle)
+        ),updated_at AS(
+
+         UPDATE turnos SET
+              pasajero = passenger
+              ,auxiliar =auxiliary
+              ,positivo = positive
+              ,bloqueo = bloking
+              ,velocidad = speed
+              ,bea_bruto = bea
+              ,vehiculo = vehicle
+              RETURNING turnos *
+          )
+        SELECT * FROM turnos WHERE id IN (SELECT id_turno FROM updated_at );
+
+
+      WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+      AS(
+        VALUES
+            (37, 1, 6, 0, 97, 102000, 7118)
+        ),updated_at AS(
+
+         UPDATE turnos SET
+              pasajero = 37
+              ,auxiliar =1
+              ,positivo = 6
+              ,bloqueo = 0
+              ,velocidad = 97
+              ,bea_bruto = 180000
+              ,vehiculo = 7118
+              RETURNING *
+          )
+        SELECT * FROM turnos WHERE id_turno IN (SELECT id_turno FROM updated_at
+        WHERE TRUE
+        AND vehiculo = 7118
+        AND id_turno = 2);
+
+
+
+WITH updated AS (UPDATE test SET description = 'test' RETURNING id)
+SELECT * FROM test WHERE id IN (SELECT id FROM updated);
+
+
+
+
+UPDATE products SET price = price * 1.10
+  WHERE price <= 99.99
+  RETURNING name, price AS new_price;
+
+
+  UPDATE turnos SET bea_bruto = 166000
+    WHERE id_turno = 1
+    RETURNING numero_turno,pasajero;
+
+
+
+
 

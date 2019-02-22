@@ -42,26 +42,26 @@ WITH turn(turno_id) AS (
 
 
 FROM turn tn
-INNER JOIN turno t
+INNER JOIN turnos t
 ON t.id_turno = turno_id
-INNER JOIN vehiculo v_t
+INNER JOIN vehiculos v_t
 ON t.vehiculo = v_t.numero_interno
-INNER JOIN rodamiento rr_t
+INNER JOIN rodamientos rr_t
 ON v_t.numero_interno = rr_t.numero_interno
-INNER JOIN ruta r
+INNER JOIN rutas r
 ON t.id_ruta = r.id_ruta
-INNER JOIN salario s_r
+INNER JOIN salarios s_r
 ON  r.salario_id = s_r.salario_id
 LEFT JOIN tasa r_t
 ON r.tasa_id = r_t.tasa_id
-LEFT JOIN descuento r_d
+LEFT JOIN descuentos r_d
 ON r.descuento_id = r_d.descuento_id
-LEFT JOIN peaje p_r
+LEFT JOIN peajes p_r
         ON r.peaje_id = p_r.id_peaje
-INNER JOIN combustible r_c
+INNER JOIN combustibles r_c
 ON r_c.combustible_id = r.combustible_id
 
-INNER JOIN costo_turno ct
+INNER JOIN costo_turnos ct
   ON t.id_turno = ct.id_turno
 WHERE TRUE
 AND ct.id_turno = t.id_turno
