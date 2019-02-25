@@ -211,10 +211,10 @@ WITH upsert AS
            UPDATE turnos
               SET pasajero = 37
               ,auxiliar =1
-              ,positivo = 6
+              ,positivo = 4
               ,bloqueo = 1
               ,velocidad = 97
-              ,bea_bruto =179750
+              ,bea_bruto =98000
               ,vehiculo = 7118
               WHERE TRUE
               AND id_turno =1

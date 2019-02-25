@@ -160,7 +160,7 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
           ELSE 0 END ) END AS costo_positivo
 
      ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
-        -- SAVEPOINT positivo;
+
      -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
 
      ,t.vehiculo
@@ -173,7 +173,7 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
     LEFT JOIN  tarifa_positivos t_rt
       ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
     WHERE TRUE
-    AND t.id_turno = NEW.id_turno
+    AND t.id_turno = NEW.id_turno;
   END IF;
   RETURN NEW;
   END;
@@ -255,6 +255,11 @@ WHERE TRUE
 ORDER BY t.id_turno DESC LIMIT 1;
 END IF;
 RETURN NEW;
+
+IF(TG_OP = 'UPDATE') THEN
+  UPDATE gasto_turno
+END IF;
+RETURN NEW;
 END;
 $gasto_turno$ LANGUAGE plpgsql VOLATILE;
 
@@ -265,7 +270,7 @@ $gasto_turno$ LANGUAGE plpgsql VOLATILE;
  EXECUTE PROCEDURE trigg_shift_expense();
 
  CREATE TRIGGER updated_gasto_turn
- BEFORE UPDATE ON costo_turnos
+ AFTER UPDATE ON costo_turnos
  FOR EACH ROW
  WHEN (OLD.pago_conductor IS DISTINCT FROM NEW.pago_conductor)
  EXECUTE PROCEDURE trigg_shift_expense();
@@ -317,11 +322,12 @@ IF(TG_OP='INSERT') THEN
     ,t_gt.descripcion
     ,t.pasajeros
     ,t_gt.conduce
-    ,SUM(COALESCE(t_ct.peaje, 0) +
-        COALESCE(t_ct.otros, 0) +
-        COALESCE(t_ct.descuento, 0) +
-        COALESCE(t_ct.pago_conductor, 0) +
-        COALESCE(t_ct.conduce, 0)) AS liquidar
+    ,ROUND(t_gt.bea_neto -(COALESCE(t_ct.peaje, 0) +
+      COALESCE(t_ct.otros, 0) +
+      COALESCE(t_ct.descuento, 0) +
+      COALESCE(t_ct.pago_conductor, 0) +
+      COALESCE(t_ct.conduce, 0))) AS liquidar
+    ,
 
 
 
@@ -362,3 +368,65 @@ INSERT INTO turnos (id_turno,pasajero, auxiliar,vehiculo)
       SET pasajero = 37,
       auxiliar = 1,
       vehiculo = 7118;
+
+
+
+
+
+
+
+        WITH gasto(id_gasto) AS (
+    values (6)
+    )
+  ,prueba AS (
+    SELECT
+    ts.id_turno
+    ,r.nombre
+    ,ts.vehiculo
+    ,t_gt.bea_neto
+    ,ROUND(t_gt.bea_neto -(COALESCE(t_ct.peaje, 0) +
+          COALESCE(t_ct.otros, 0) +
+          COALESCE(t_ct.descuento, 0) +
+          COALESCE(t_ct.pago_conductor, 0) +
+          COALESCE(t_ct.conduce, 0))) AS liquidar
+    -- ,COALESCE((gasto - t_gt.bea_neto) ,0 ) AS liquidar
+    ,t_ct.peaje
+    ,t_ct.otros
+    ,t_ct.descuento
+    ,t_ct.pago_conductor
+    ,t_ct.conduce
+    FROM gasto g
+      INNER JOIN gasto_turnos t_ct
+        ON g.id_gasto = t_ct.gasto_id
+      INNER JOIN costo_turnos t_gt
+        ON t_ct.id_turno = t_gt.id_turno
+      INNER JOIN turnos ts
+        ON ts.id_turno = t_ct.id_turno
+      INNER JOIN rutas r
+        ON ts.id_ruta = r.id_ruta
+      WHERE TRUE
+      GROUP BY t_ct.id_turno
+      ,t_gt.id_turno
+      ,ts.id_turno,
+      r.nombre
+      ,ts.vehiculo
+      ,t_gt.bea_neto
+      ,t_ct.peaje
+      ,t_ct.otros
+      ,t_ct.descuento
+      ,t_ct.pago_conductor
+      ,t_ct.conduce
+      ORDER BY t_gt.id_turno DESC LIMIT 1
+    )
+  SELECT
+  p.vehiculo
+  ,p.id_turno
+  ,p.nombre
+  ,p.bea_neto
+  ,p.liquidar
+  ,p.peaje
+  ,p.otros
+  ,p.descuento
+  ,p.pago_conductor
+  ,p.conduce
+  FROM prueba p;
