@@ -55,6 +55,25 @@ WITH turn(id_turno) AS (
 	FROM consulta c;
 
 
+
+
+
+
 maxi candelaria = 70.000
 buga 50.000;
 costa rica 70.0001
+
+
+SELECT
+rr_r.id_ruta_reloj
+,rr_r.id_ruta
+,r.nombre
+,rj.nombre_reloj
+FROM ruta_relojes rr_r
+	INNER JOIN rutas r
+		ON r.id_ruta = rr_r.id_ruta
+	INNER JOIN relojes rj
+		ON rj.id_reloj = rr_r.id_reloj
+where TRUE
+AND r.id_ruta = 14
+ORDER BY rr_r.id_ruta_reloj;

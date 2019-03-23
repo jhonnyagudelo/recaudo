@@ -137,6 +137,35 @@ WITH upsert AS
 
 
 
+INSERT INTO turnos(
+  pasajero
+  ,auxiliar
+  ,positivo
+  ,bloqueo
+  ,velocidad
+  ,bea_bruto
+
+)
+VALUES (
+  32
+  ,1
+  ,6
+  ,1
+  ,97
+  ,102000
+);
+
+RETURNING *;
+
+
+
+
+
+
+
+
+
+
     WITH update_turns (pasajero, auxiliar, positivo, bloqueo, velocidad, bea_bruto, vehiculo)
       AS(
         VALUES
@@ -149,7 +178,7 @@ WITH upsert AS
               ,positivo = 6
               ,bloqueo = 1
               ,velocidad = 97
-              ,bea_bruto = 000
+              ,bea_bruto = 10000
               ,vehiculo = 7118
             FROM update_turns u_ts
               INNER JOIN turnos t
@@ -208,21 +237,6 @@ WITH upsert AS
 
 
 
-           UPDATE turnos
-              SET pasajero = 37
-              ,auxiliar =1
-              ,positivo = 4
-              ,bloqueo = 1
-              ,velocidad = 97
-              ,bea_bruto =98000
-              ,vehiculo = 7118
-              WHERE TRUE
-              AND id_turno =1
-              AND vehiculo = 7118
-            RETURNING
-            id_turno
-            ,vehiculo
-            ,numero_turno;
 
 
 
@@ -292,12 +306,18 @@ WITH upsert AS
          UPDATE turnos SET
               pasajero = 37
               ,auxiliar =1
-              ,positivo = 6
+              ,positivo = 0
               ,bloqueo = 0
               ,velocidad = 97
-              ,bea_bruto = 180000
-              ,vehiculo = 7118
-              RETURNING *
+              ,bea_bruto = 150000
+              ,vehiculo = 4001
+              FROM vehiculos v_r
+                INNER JOIN rodamientos r_ct
+                  ON v_r.numero_interno = r_ct.numero_interno
+              WHERE TRUE
+              AND v_r.numero_interno = 4001
+              RETURNING id_turno;
+
           )
         SELECT * FROM turnos WHERE id_turno IN (SELECT id_turno FROM updated_at
         WHERE TRUE
@@ -322,6 +342,11 @@ UPDATE products SET price = price * 1.10
     RETURNING numero_turno,pasajero;
 
 
-
-
-
+UPDATE costo_turnos
+        SET bea_neto = bea_bruto
+      FROM turnos t
+      INNER JOIN rodamientos r_t
+        ON t.rodamiento_id = r_t.id_rodamiento
+      WHERE TRUE
+      AND t.id_turno = OLD.id_turno;
+      RAISE NOTICE  'ACTUALICE % ', OLD.id_turno;

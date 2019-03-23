@@ -248,4 +248,29 @@ SELECT id_turno
 
 
 
-selec
+INSERT INTO tag ("key", "value")
+SELECT 'key1', 'value1'
+WHERE NOT EXISTS (
+    SELECT id, "key", "value"
+    FROM node_tag
+    WHERE key = 'key1' AND value = 'value1'
+    )
+returning id, "key", "value"
+
+To return the row if it already exists
+
+with s as (
+    select id, "key", "value"
+    from tag
+    where key = 'key1' and value = 'value1'
+), i as (
+    insert into tag ("key", "value")
+    select 'key1', 'value1'
+    where not exists (select 1 from s)
+    returning id, "key", "value"
+)
+select id, "key", "value"
+from i
+union all
+select id, "key", "value"
+from s

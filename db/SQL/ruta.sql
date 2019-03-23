@@ -1,7 +1,7 @@
 WITH turn(turno_id) AS (
-  VALUES(2)
+  VALUES(1)
   )
-,Z AS(
+,consulta AS(
   SELECT
     t.id_turno
     ,t.numero_turno
@@ -27,9 +27,9 @@ WITH turn(turno_id) AS (
       AS cancelar
 
       FROM turn tn
-      INNER JOIN turno t
+      INNER JOIN turnos t
         ON tn.turno_id = t.id_turno
-      INNER JOIN tiempo tp
+      LEFT JOIN tiempos tp
         ON tp.id_turno = t.id_turno
       WHERE TRUE
       ORDER BY tp.tiempo_max
@@ -43,7 +43,17 @@ WITH turn(turno_id) AS (
   ,c.tiempo_marcada
   ,c.numero_caida
   ,c.total_caida
-  ,cancelar
-  ,SUM(cancelar)OVER( PARTITION BY total_caida ) AS total_cancelar
-
+  ,c.cancelar
+  ,SUM(c.cancelar)OVER( PARTITION BY c.total_caida ) AS total_cancelar
 FROM consulta c;
+
+
+
+
+
+
+
+  ,CASE WHEN total_cancelar >= tp.recaudo_max
+  THEN tp.recaudo_max
+   ELSE total_cancelar
+   END AS pagar

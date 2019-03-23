@@ -1,4 +1,12 @@
-CREATE OR REPLACE FUNCTION turns(num_vehiculo INT, ruta INT,num_turno INT, salida TIME, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
+/*1 - asociado del bus con su respectivo bus
+  2 - estatus inicial {
+    - disponible
+    - rodamiento
+    - taller
+    - fuera de servicio
+*/
+
+CREATE OR REPLACE FUNCTION turns(num_vehiculo INT, idruta INT,num_turno INT, salida TIME, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
 DECLARE
 
 /*
@@ -7,8 +15,6 @@ DECLARE
  * statement in PostgreSQL.
  */
 
-numturno INT;
-nombre_ruta varchar(30);
 BEGIN
 -- CREATE TYPE estado AS ENUM ('Pendiente','Transito','Terminado')
 
@@ -16,7 +22,7 @@ INSERT INTO
   turnos( vehiculo, id_ruta, numero_turno, rodamiento_id, hora_salida, mensaje)
     SELECT
       num_vehiculo
-      ,ruta
+      ,idruta
       ,num_turno
       ,r_ct.id_rodamiento
       ,salida
@@ -25,8 +31,10 @@ INSERT INTO
       INNER JOIN rodamientos r_ct
         ON v_r.numero_interno = r_ct.numero_interno
     WHERE TRUE
+    AND CURRENT_DATE::TIMESTAMP <= r_ct.create_at
     AND v_r.numero_interno = num_vehiculo
     ORDER BY  r_ct.id_rodamiento DESC limit 1;
+
 END;
 $$ LANGUAGE plpgsql VOLATILE;
 
@@ -97,38 +105,37 @@ DECLARE
 
   UPDATE tiempos SET tiempo_marcada = time_marked
     WHERE id_tiempo = idtiempo;
-  UPDATE tiempos SET  numero_caida =  (SELECT EXTRACT( MINUTE FROM tiempo_marcada - tiempo_max ))
-      WHERE id_tiempo = idtiempo;
   END;
   $marcada$ LANGUAGE plpgsql;
-  -----------------------INSERTAR VALORES TURNOS-------------------------
-CREATE OR REPLACE FUNCTION update_turns(passenger INT,auxiliary INT,positive INT,bloking INT,speed INT,bea DOUBLE PRECISION, vehicle INT) RETURNS VOID AS $update_turn$
+----------------------------trigger tiempo de marcada------------------------------------------
+CREATE OR REPLACE FUNCTION trigg_marked() RETURNS TRIGGER AS $marcada$
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: Costo ruta
  * statement in PostgreSQL.
  */
-DECLARE
 BEGIN
-WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
-AS(
-VALUES
-  (passenger, auxiliary, positive, bloking, speed, bea, vehicle)
-),updated_at AS(
-
-UPDATE turnos SET
-    pasajero = passenger
-    ,auxiliar =auxiliary
-    ,positivo = positive
-    ,bloqueo = bloking
-    ,velocidad = speed
-    ,bea_bruto = bea
-    ,vehiculo = vehicle
-    RETURNING id_turno
-)
-SELECT * FROM turnos WHERE id_turno IN (SELECT id_turno FROM updated_at );
+IF(TG_OP = 'UPDATE') THEN
+UPDATE tiempos
+ SET numero_caida =
+    EXTRACT( MINUTE FROM NEW.tiempo_marcada - tiempo_max )
+    WHERE TRUE
+    AND id_tiempo = NEW.id_tiempo;
+END IF;
+RETURN NEW;
 END;
-$update_turn$ LANGUAGE plpgsql VOLATILE;
+$marcada$ LANGUAGE plpgsql;
+
+  CREATE TRIGGER update_trigg_marked
+  AFTER UPDATE OF tiempo_marcada ON tiempos
+  FOR EACH ROW
+  EXECUTE PROCEDURE trigg_marked();
+
+
+----------------------INSERTAR VALORES TURNOS-------------------------
+WITH
+
+
 
 
 ------------------------------- costo_turno--------------------------------------------------
@@ -139,51 +146,69 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
    * statement in PostgreSQL.
    */
   DECLARE
-
+  data_costo_turno RECORD;
   BEGIN
-  IF(TG_OP = 'UPDATE') THEN
-  INSERT INTO costo_turnos (
-    id_turno
-    ,costo_positivo
-    ,bea_neto
-    -- ,bea_neto_total
-    ,vehiculo
-    ,numero_turno
-    )
-    SELECT
-     NEW.id_turno
+      SELECT *
+        INTO
+        data_costo_turno
+        FROM costo_turnos
+        WHERE TRUE
+        AND id_turno = OLD.id_turno ;
 
-     ,CASE
-        WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
-        (CASE WHEN t.positivo >= t_rt.num_positivo
-            THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
-          ELSE 0 END ) END AS costo_positivo
+        IF NOT FOUND
+          INSERT INTO costo_turnos (
+            id_turno
+            ,costo_positivo
+            ,bea_neto
+            ,bea_neto_total
+            ,vehiculo
+            ,numero_turno
+            )
+            SELECT
+             NEW.id_turno
+             ,CASE
+                WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
+                (CASE WHEN t.positivo >= t_rt.num_positivo
+                    THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
+                  ELSE 0 END ) END AS costo_positivo
 
-     ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
+             ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
 
-     -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
+             -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
 
-     ,t.vehiculo
-     ,t.numero_turno
-    FROM turnos t
-    INNER JOIN rutas r_t
-      ON t.id_ruta = r_t.id_ruta
-    LEFT JOIN ayuda_auxiliar aa_v
-      ON  r_t.id_ayuda = aa_v.id_ayuda
-    LEFT JOIN  tarifa_positivos t_rt
-      ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
-    WHERE TRUE
-    AND t.id_turno = NEW.id_turno;
-  END IF;
-  RETURN NEW;
-  END;
-  $costo_turno$ LANGUAGE plpgsql VOLATILE;
+             ,t.vehiculo
+             ,t.numero_turno
+            FROM turnos t
+            INNER JOIN rodamientos rd_t
+              ON t.rodamiento_id = rd_t.id_rodamiento
+            INNER JOIN vehiculos v_r
+              ON  v_r.numero_interno = rd_t.numero_interno
+            INNER JOIN rutas r_t
+              ON t.id_ruta = r_t.id_ruta
+            LEFT JOIN ayuda_auxiliar aa_v
+              ON  r_t.id_ayuda = aa_v.id_ayuda
+            LEFT JOIN  tarifa_positivos t_rt
+              ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
+            WHERE TRUE
+            AND t.id_turno = NEW.id_turno;
+
+            ELSE
+              UPDATE
+        END IF;
+      RETURN NEW;
+      END;
+    $costo_turno$ LANGUAGE plpgsql VOLATILE;
 
 CREATE TRIGGER after_cost_turn
   AFTER UPDATE ON turnos
   FOR EACH ROW
   EXECUTE PROCEDURE trigg_shift_cost();
 
+CREATE TRIGGER before_bea_bruta_turn
+  AFTER UPDATE ON turnos
+  FOR EACH ROW
+  WHEN(OLD.bea_bruto IS DISTINCT FROM NEW.bea_bruto)
+  EXECUTE PROCEDURE trigg_shift_cost();
 -----------------------------------------gasto_turno--------------------------------------------------------
 
 
@@ -215,9 +240,9 @@ BEGIN
 
       ,COALESCE(p_r.precio_peaje, 0) AS peaje
 
-      ,CASE WHEN s_r.valor_salario >= 1
-        THEN s_r.valor_salario
-          ELSE ct_t.bea_neto * s_r.valor_salario
+      ,CASE
+            WHEN s_r.salario_id = r.salario_id
+              THEN ct_t.bea_neto * s_r.valor_salario
       END AS pago_conductor
 
       ,COALESCE(r_d.precio_unico, 0) AS descuento
@@ -255,11 +280,6 @@ WHERE TRUE
 ORDER BY t.id_turno DESC LIMIT 1;
 END IF;
 RETURN NEW;
-
-IF(TG_OP = 'UPDATE') THEN
-  UPDATE gasto_turno
-END IF;
-RETURN NEW;
 END;
 $gasto_turno$ LANGUAGE plpgsql VOLATILE;
 
@@ -270,10 +290,45 @@ $gasto_turno$ LANGUAGE plpgsql VOLATILE;
  EXECUTE PROCEDURE trigg_shift_expense();
 
  CREATE TRIGGER updated_gasto_turn
- AFTER UPDATE ON costo_turnos
+ BEFORE UPDATE ON costo_turnos
  FOR EACH ROW
- WHEN (OLD.pago_conductor IS DISTINCT FROM NEW.pago_conductor)
  EXECUTE PROCEDURE trigg_shift_expense();
+
+
+-----------------------------------------------actualizar update_at------------------------------
+ CREATE OR REPLACE FUNCTION update_at_modified() RETURNS TRIGGER AS $$
+  BEGIN
+  IF(TG_OP = 'UPDATE') THEN
+    NEW.update_at =now();
+    END IF;
+    RETURN NEW;
+  END;
+$$ LANGUAGE plpgsql VOLATILE;
+
+CREATE TRIGGER update_turns_modtime
+BEFORE UPDATE ON turnos
+FOR EACH ROW
+WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_shift_modtime
+BEFORE UPDATE ON gasto_turnos
+FOR EACH ROW
+WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_combustible_modtime
+BEFORE UPDATE ON combustibles
+FOR EACH ROW
+WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_tarifa_modtime
+BEFORE UPDATE ON tarifa_positivos
+FOR EACH ROW
+WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
 
  ---------------------------------------liquidacion_turno-------------------------------------------------
 CREATE OR REPLACE FUNCTION payment_turn() RETURNS TRIGGER AS $liquidacion_turno$
@@ -384,6 +439,9 @@ INSERT INTO turnos (id_turno,pasajero, auxiliar,vehiculo)
     ,r.nombre
     ,ts.vehiculo
     ,t_gt.bea_neto
+    ,COALESCE(
+            t_ct.bea_neto + t_ct.costo_positivo, 0
+      )AS valor_total
     ,ROUND(t_gt.bea_neto -(COALESCE(t_ct.peaje, 0) +
           COALESCE(t_ct.otros, 0) +
           COALESCE(t_ct.descuento, 0) +
