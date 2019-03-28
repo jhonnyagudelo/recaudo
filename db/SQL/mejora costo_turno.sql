@@ -310,7 +310,7 @@ RETURNING *;
               ,bloqueo = 0
               ,velocidad = 97
               ,bea_bruto = 150000
-              ,vehiculo = 4001
+              ,vehiculo = 7118
               FROM vehiculos v_r
                 INNER JOIN rodamientos r_ct
                   ON v_r.numero_interno = r_ct.numero_interno

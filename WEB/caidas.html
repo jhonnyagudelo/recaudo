@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>SUIC | Caídas</title>
+<link href="https://fonts.googleapis.com/css?family=Poppins|Source+Sans+Pro" rel="stylesheet">
+	<link rel="stylesheet" type="text/css" href="css/style1.css">
+</head>
+<body>
+<div class="container">
+	<header class="header" id="header">
+		<div class="header__logo">
+			<a href="#principal">suic</a>
+		</div>
+		<nav class="header__nav">
+			<ul>
+				<li class = "nav_link" >
+					<a href="principal">Principal</a>
+				</li>
+				<li class = "nav_link" >
+					<a href="rodamiento">Rodamiento</a>
+						<ul class="sub__menu">
+							<li><a href="add_tread">Agregar rodamiento</a></li>
+							<li><a href="remove_tread">Remover rodamiento</a></li>
+						</ul>
+				</li>
+				<li class = "nav_link" >
+					<a href="tiempo">Tiempos</a>
+						<ul class="sub__menu">
+							<li><a href="add_vehicle">Mirar Tiempos</a></li>
+							<li><a href="remove_vehicle">Consultar Tiempo</a></li>
+						</ul>
+				</li>
+				<li class = "nav_link" >
+					<a href="Personas">Operadores</a>
+						<ul class="sub__menu">
+							<li><a href="add_vehicle">Agregar operador</a></li>
+							<li><a href="remove_vehicle">Remover operador</a></li>
+						</ul>
+				</li>
+				<li class = "nav_link" >
+					<h2>Turnos</h2>
+						<ul class="sub__menu">
+							<li><a href="add_vehicle">Agregar turno</a></li>
+							<li><a href="remove_vehicle">Remover turno</a></li>
+						</ul>
+				</li>
+
+			</ul>
+		</nav>
+	</header>
+
+	<section class ="info" id="info">
+		<article class = "departure">
+			<div class="location">
+				<h1 class="title__location">Ubicación</h1>
+			</div>
+			<div class="date">
+				<h1 class="title__date">Fecha</h1>
+				<div class = "info__date" id="info__date"></div>
+			</div>
+			<div class="time">
+				<h1 class="title__time">Hora</h1>
+				<div class = "info__time" id="info__time"></div>
+			</div>
+		</article>
+	</section>
+<section class="marked">
+	<article class="info__marked" >
+	<table>
+		<thead>
+			<tr>
+				<th>Salida</th>
+				<th>Vehículo</th>
+				<th>Mio</th>
+				<th>42-48</th>
+				<th>Reforma</th>
+				<th>Reloj Ginebra</th>
+				<th>Observación</th>
+			</tr>
+		</thead>
+		</table>
+	</article>
+</section>
+</div>
+<script src="js/application.js">
+</script>
+</body>
+</html>

@@ -8,23 +8,23 @@ SELECT
 	FROM turno
 	WHERE id_turno = 1
 
-
 	UNION
 
 	SELECT
 	t.id_turno
 	,t.id_ruta
-	FROM turno t
-	INNER JOIN prueba p ON p.id_turno = t.id_turno
+	FROM turnos t
+	INNER JOIN prueba p
+	ON p.id_turno = t.id_turno
 
 	UNION
 
 	SELECT
 	r.hora_salida
 	p.id_turno
-	FROM rodamiento r
-	INNER JOIN  turno t_r
-		ON r.id_rodamiento = t. rodamiento
+	FROM rodamientos r
+	INNER JOIN  turnos t_r
+		ON r.id_rodamiento = t.rodamiento
 	)
 SELECT * FROM prueba p;
 
@@ -35,10 +35,10 @@ SELECT * FROM prueba p;
 -------------------------
 WITH RECURSIVE prueba AS (
 SELECT
-	,turno.rodamiento
-	id_turno
+	turno.rodamientos
+	,id_turno
 	,id_ruta
-	FROM turno
+	FROM turnos
 	WHERE id_turno = 1
 
 	UNION
