@@ -15,31 +15,31 @@
 				<nav class="header__nav">
 					<ul>
 						<li class = "nav_link" >
-							<i class="icon-home3"></i><a href="#">Principal</a>
+							<i class="nav__icon icon-home3"></i><a href="#">Principal</a>
 						</li>
 						<li class = "nav_link" >
-							<i class="icon-truck"></i> <a href="#">Rodamiento</a>
+							<i class="nav__icon icon-truck"></i> <a href="#">Rodamiento</a>
 						</li>
 						<ul class="sub__menu">
-							<li><a href="add_tread">Agregar rodamiento</a></li>
+							<li><a class="add_tread" href="#">Agregar rodamiento</a></li>
 							<li><a href="remove_tread">Remover rodamiento</a></li>
 						</ul>
 						<li class = "nav_link">
-							<i class="icon-stopwatch"></i> <a href="#">Tiempos</a>
+							<i class="nav__icon icon-stopwatch"></i> <a href="#">Tiempos</a>
 						</li>
 						<ul class="sub__menu">
 							<li><a href="add_vehicle">Mirar Tiempos</a></li>
 							<li><a href="remove_vehicle">Consultar Tiempo</a></li>
 						</ul>
 						<li class = "nav_link" >
-							<i class="icon-user"></i> <a href="#">Operadores</a>
+							<i class="nav__icon icon-user"></i> <a href="#">Operadores</a>
 						</li>
 						<ul class="sub__menu">
 							<li><a href="add_vehicle">Agregar operador</a></li>
 							<li><a href="remove_vehicle">Remover operador</a></li>
 						</ul>
 						<li class = "nav_link" >
-							<i class="icon-spinner10"></i> <a href="#">Turnos</a>
+							<i class="nav__icon icon-spinner10"></i> <a href="#">Turnos</a>
 						</li>
 						<ul class="sub__menu">
 							<li><a href="add_vehicle">Agregar turno</a></li>
@@ -65,7 +65,7 @@
 			</section>
 			<section class="marked">
 				<article class="info__marked" >
-					<table>
+					<table class="info__frame">
 						<thead>
 							<tr>
 								<th>Salida</th>
@@ -79,6 +79,23 @@
 						</thead>
 					</table>
 				</article>
+			</section>
+			<section class="form_modal">
+				<div class="modal" id="modal">
+					<form class="action_modal" action="caidas_submit" method="get" accept-charset="utf-8">
+						<h1 class="title__from-add">Agregar vehiculos</h1>
+						<label for="placa">Ingresar placa</label>
+						<input type="text" required placeholder="Ingresar placa" name="placa" value="">
+						<label for="marca">Ingresar modelo</label>
+						<input type="text" required autofocus placeholder="Ingresar modelo" name="modelo" value="">
+						<label for="numero_interno"> Numero interno</label>
+						<input type="text" required placeholder="Numero interno" name="numero_interno" value="">
+						<div class="btn_form">
+							<button class="btn add" id="hiden-add" type="submit" value="agregar">Agregar</button>
+							<button class="btn close" id="hiden-calcel" type="submit" value="cencelar">Cancelar</button>
+						</div>
+					</form>
+				</div>
 			</section>
 		</div>
 		<script src="js/application.js">

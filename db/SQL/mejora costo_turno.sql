@@ -231,7 +231,7 @@ RETURNING *;
               AND
               RETURNING turnos *
 
-          INSERT INTO turnos (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
+          -- INSERT INTO turnos (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
 
 
 
@@ -350,3 +350,9 @@ UPDATE costo_turnos
       WHERE TRUE
       AND t.id_turno = OLD.id_turno;
       RAISE NOTICE  'ACTUALICE % ', OLD.id_turno;
+
+
+
+WITH update_turns  (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo) AS (
+  VALUES ()
+)
