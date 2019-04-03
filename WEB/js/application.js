@@ -35,20 +35,26 @@ for (i = 0; i < nav.length; i++) {
 }
 
 
-// // modal
-// var $addButton = document.getElementById('add_tread');
-// var $cancelButton = document.getElementById('hiden-cancel');
-// var $modal = document.getElementById('modal');
-// var $form_modal = document.getElementById('form_modal');
+
+
+
+
+
+
+// modal
+var $addButton = document.getElementById('add_tread');
+var $cancelButton = document.getElementById('hiden-cancel');
+var $modal = document.getElementById('modal');
+var $form_modal = document.getElementById('form_modal');
 
 // $cancelButton = addEventListener('click', (event) =>{
 //   $modal.style.animation = 'animationOut .8s forwards';
 //   $form_modal.classList.remove('active');
 // });
 
-// $addButton = addEventListener('click', (event) =>{
-//   $modal.style.animation = 'animationIn .8s forwards';
-//   $form_modal.classList.add('active');
-// });
+$addButton = addEventListener('click', (event) =>{
+  $modal.style.animation = 'animationIn .8s forwards';
+  $form_modal.classList.add('active');
+});
 
 
