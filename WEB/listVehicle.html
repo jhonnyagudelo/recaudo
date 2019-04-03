@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>SUIC | Caídas</title>
+		<link href="https://fonts.googleapis.com/css?family=Poppins|Source+Sans+Pro" rel="stylesheet">
+		<link rel="stylesheet" type="text/css" href="css/style1.css">
+	</head>
+	<body>
+		<div class="container">
+			<header class="header" id="header">
+				<div class="header__logo">
+					<a href="#">Listado Vehiculos | Suic</a>
+				</div>
+				<nav class="header__nav">
+					<ul class="">
+						<li class = "nav_link" id="nav__link" >
+							<i class="nav__icon icon-home3 "></i><a href="#">Principal</a>
+						</li>
+						<li class = "nav_link" id="nav__link" >
+							<i class="nav__icon icon-truck"></i><a href="#">Vehículos</a>
+						</li>
+						<ul class="sub__menu">
+							<li id="add_tread" ><a href="#">Agregar vehículo</a></li>
+							<li><a href="#">Actualizar vehículo</a></li>
+							<li><a href="#">Eliminar vehículo</a></li>
+						</ul>
+						<li class = "nav_link" id="nav__link" >
+							<i class="nav__icon icon-road "></i><a href="#">Rodamiento</a>
+						</li>
+						<ul class="sub__menu">
+							<li><a class="add_tread"    href="#">Agregar rodamiento</a></li>
+							<li><a href="#">Remover rodamiento</a></li>
+						</ul>
+						<li class = "nav_link" id="nav__link">
+							<i class="nav__icon icon-stopwatch"></i><a href="#">Tiempos</a>
+							<ul class="sub__menu">
+								<li><a href="#">Mirar Tiempos</a></li>
+								<li><a href="#">Consultar Tiempo</a></li>
+							</ul>
+						</li>
+						<li class = "nav_link" id="nav__link" >
+							<i class="nav__icon icon-user"></i><a href="#">Operadores</a>
+							<ul class="sub__menu">
+								<li><a href="#">Agregar operador</a></li>
+								<li><a href="#">Remover operador</a></li>
+							</ul>
+						</li>
+						<li class = "nav_link" id="nav__link" >
+							<i class="nav__icon icon-spinner10"></i><a href="#">Turnos</a>
+							<ul class="sub__menu">
+								<li><a href="#">Agregar turno</a></li>
+								<li><a href="#">Remover turno</a></li>
+							</ul>
+						</li>
+					</ul>
+				</nav>
+			</header>
+			<section class ="info" id="info">
+				<article class = "departure">
+					<div class="location">
+						<h1 class="title__location">Ubicación</h1>
+					</div>
+					<div class="date">
+						<h1 class="title__date">Fecha</h1>
+						<div class = "info__date" id="info__date"></div>
+					</div>
+					<div class="time">
+						<h1 class="title__time">Hora</h1>
+						<div class = "info__time" id="info__time"></div>
+					</div>
+				</article>
+			</section>
+			<section class="marked">
+				<article class="info__marked" >
+					<table class="info__frame">
+						<thead>
+							<tr>
+								<th>Salida</th>
+								<th>Vehículo</th>
+								<th>Mio</th>
+								<th>42-48</th>
+								<th>Reforma</th>
+								<th>Reloj Ginebra</th>
+								<th>Observación</th>
+							</tr>
+						</thead>
+					</table>
+				</article>
+			</section>
+			<section class="formulario add_vehicle">
+				<div class="form_modal" id="form_modal">
+					<div class="modal " id="modal">
+						<h1 class="title__from">Agregar Vehículo</h1>
+						<div class="side__left">
+							<form class="action_modal" action="caidas_submit" method="get" accept-charset="utf-8">
+								<label for="placa">Ingresar placa
+									<input type="text" required placeholder="Ingresar placa" name="placa" value="">
+								</label>
+								<label for="marca">Ingresar modelo
+									<input type="text" required autofocus placeholder="Ingresar modelo" name="modelo" value="">
+								</label>
+								<label for="numero_interno"> Numero interno
+									<input type="text" required placeholder="Numero interno" name="numero_interno" value="">
+								</label>
+								<label for="capacidad">Capacidad</label>
+								<input type="text" required name="capacidad" placeholder="capacidad">
+								<label for="consumo_galon">Consumo por galón</label>
+								<input type="text" required name="consumo_galon" placeholder="consumo galon">
+
+							</form>
+						</div>
+						<div class="side__right">
+							<form class="action_modal" action="caidas_submit" method="get" accept-charset="utf-8">
+								<label for="clase_bus">Clase bus</label>
+								<select id="clase_bus" name="clase_bus" >
+									<option value="">--Seleccionar una opción--</option>
+									<option value="buseta">Buseta</option>
+									<option value="bus">Bus</option>
+									<option value="microbus">Micro bus</option>
+									<option value="busetaNPR">NPR</option>
+								</select>
+								<label for="ruta">Ruta</label>
+								<select id="ruta" name="ruta" >
+									<option value="">--Seleccionar una opción--</option>
+									<option value="buga">Buga</option>
+									<option value="florida">Florida</option>
+									<option value="pradera">Pradera</option>
+									<option value="costa_rica">Costa rica</option>
+									<option value="candelario">Candelaria</option>
+								</select>
+								<label for="marcas">Marcas
+									<select id="marca" name="marca">
+										<option value="">--Seleccionar una opcion--</option>
+										<option value="chev">Chev</option>
+										<option value="ford">Ford</option>
+										<option value="stud">Stud</option>
+										<option value="daihat">Daihat</option>
+										<option value="merc">Merc</option>
+										<option value="dog">Dog</option>
+										<option value="hino">Hino</option>
+										<option value="NonPlusUltra">Non plus ultra</option>
+										<option value="nissa">Nissan</option>
+										<option value="novie">Novie</option>
+										<option value="iveco">Iveco</option>
+										<option value="volsk">Volsk</option>
+										<option value="tl">TL</option>
+										<option value="jac">JAC</option>
+									</select>
+								</label>
+								<label for="marcas">Carrocería
+									<select id="carroceria" name="carroceria">
+										<option value="">--Seleccionar una opción--</option>
+										<option value="carrado">Cerrado</option>
+										<option value="abierto">Abierto</option>
+										<option value="escalera">Escalera</option>
+									</select>
+								</label>
+								<h3 class="radio_title">Estado</h3>
+								<div class="radio__toobal">
+									<label for="activo">Activo
+										<input type="radio" name="estado" checked value="activo">
+									</label>
+									<label for="desactivo">Desactivo
+										<input type="radio" name="estado" value="desactivo">
+									</label>
+								</div>
+							</form>
+						</div>
+						<div class="btn_form">
+							<button class="btn btn__add" id="hiden-add" type="submit" value="agregar">Agregar</button>
+							<button class="btn btn__close" id="hiden-cancel" type="submit" value="cencelar">Cancelar</button>
+						</div>
+					</div>
+				</div>
+			</section>
+		</div>
+		<script src="js/application.js">
+		</script>
+	</body>
+</html>

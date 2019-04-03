@@ -210,9 +210,9 @@ td{
   }
 
 
-.modal {
+.action_modal {
 	display: grid;
-	grid-template-areas: "title__from-add title__from-add"
+	grid-template-areas: "title__form title__form"
 						 "side__left side__right"
 						 "btn_form btn_form";
 	grid-template-columns: 1fr 1fr;
@@ -222,17 +222,18 @@ td{
 	background-color:white;
 	border:1px solid #273b47;
 	border-radius: .8em;
-	width: 700px;
-	height: 500px;
+	width: 520px;
+	height: 430px;
+	text-align: center;
 	/*animation: animationIn .8s forwards;*/
 }
 
-.title__from-add {
-		text-align: center;
+.title__form {
+	grid-area: title__form;
 	text-transform: uppercase;
 	margin-bottom: 10px;
 	font-weight: 800;
-	color: #273b47;
+	color: inherit;
 	padding: 0 10px;
 }
 
@@ -258,7 +259,7 @@ td{
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	transition:all 0.5s ease-out;
+	transition: all 1s ease-out;
 }
 
 .form_modal.active {
@@ -267,19 +268,13 @@ td{
 }
 
 
-
-
 .btn_form {
 	grid-area:btn_form;
 	text-align: center;
 }
-.title__from-add {
-	grid-area: title__from-add;
-}
 
 .action_modal {
-	max-width: 100%;
-	text-align: center;
+
 }
 .action_modal input{
 	display: block;
@@ -338,35 +333,37 @@ td{
 
 /*ANIMACIONES*/
 @keyframes animationIn{
-			0%{
-				transform: translateY(-3000px);
-			}
-			60%{
-				transform: translateY(25px);
-			}
-			75%{
-				transform: translateY(-10px);
-			}
-			90%{
-				transform: translateY(0px);
-			}
-		}
+  0% {
+    transform: translateY(-3000px);
+  }
+  60% {
+    transform: translateY(25px);
+  }
+  75% {
+    transform: translateY(-10px);
+  }
+  90% {
+    transform: translateY(5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
 
 		@keyframes animationOut{
-			0%{
-				transform: translateY(5px);
-			}
-			60%{
-				transform: translateY(-10px);
-			}
-			75%{
-				transform: translateY(25px);
-			}
-			100%{
-				transform: translateY(-3000px);
-			}
-		}
-
+  0% {
+    transform: translateY(5px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+  75% {
+    transform: translateY(25px);
+  }
+  100% {
+    transform: translateY(-3000px);
+  }
+}
 
 /*ANIMACIONES*/
 
@@ -385,9 +382,8 @@ td{
 		overflow: auto;
 		border:1px solid #273b47;
 	}
-	.modal{
+	.action_modal{
 		max-width: 400px;
-		height:430px;
 	}
 	.action_modal input{
 		width:auto;
