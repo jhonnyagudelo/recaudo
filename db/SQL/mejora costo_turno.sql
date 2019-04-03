@@ -272,12 +272,6 @@ RETURNING *;
 
 
 
-
-
-
-
-
-
     WITH updated_turns (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo)
       AS(
         VALUES
@@ -356,3 +350,9 @@ UPDATE costo_turnos
 WITH update_turns  (pasajero, auxiliar, positivo, bloqueos, velocidad, bea_bruto, vehiculo) AS (
   VALUES ()
 )
+,select_turno AS (
+
+)
+
+
+

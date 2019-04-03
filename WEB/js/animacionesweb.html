@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <metacharset="utf-8">
+    <title>Animaciones de entrada y salida</title>
+    <style media="screen">
+      body{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        font-family: Arial;
+        flex-direction: column;
+      }
+      .overlay{
+        background: rgba(0, 0, 0, 0.5);
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 1.1s ease-in;
+        opacity: 0;
+        visibility: hidden;
+      }
+      .overlay.active{
+        opacity: 1;
+        visibility: visible;
+      }
+      .modal{
+        width: 500px;
+        background: white;
+        animation: modalIn .8s forwards;
+        animation-play-state: paused;
+        padding: 2em;
+        border-radius: .5em;
+        text-align: center;
+
+      }
+      #segunda{
+        visibility: hidden;
+      }
+      .btn{
+        text-align: center;
+        padding: .6em .8em .8em;
+        border: none;
+        color: white;
+        margin: 5px;
+        border-radius: 5px;
+        cursor: pointer;
+        box-shadow: inset 0 -.2emrgba(0,0,0, .2);
+        outline: 0;
+        transition: .2s;
+        will-change: transform;
+        background: lightgray;
+      }
+      .btn.primario{
+        background: #4ebde5;
+      }
+      .btn.warning{
+        background: #ff463b;
+      }
+      .btn.salir{
+        color: black;
+        border-radius: 50%;
+        float: right;
+      }
+      .btn.open-modal{
+        font-size: 3em;
+        background: #4ebde5;
+      }
+      .btn:active{
+        transform: scale(.9);
+      }
+      @keyframes modalIn {
+        0%{
+          transform: translateY(-3000px);
+        }
+        60%{
+          transform: translateY(25px);
+        }
+        70%{
+          transform: translateY(-10px);
+        }
+        90% {
+          transform: translateY(5px);
+        }
+      }
+      @keyframes modalOut {
+        0% {
+          transform: translateY(5px);
+        }
+        60%{
+          transform: translateY(-10px);
+        }
+        75%{
+          transform: translateY(25px);
+        }
+        100%{
+          transform: translateY(-3000px);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="btn open-modal"id="open">Click para ver el Modal!</button>
+    <img src="img/platzi.png"id="imagen1"alt="">
+    <div class="overlay"id="overlay">
+      <div class="modal"id="modal">
+        <button type="button"class="btn salir"id="salir"name="button">X</button>
+        <h1>Atencion!</h1>
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+          sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+        </p>
+        <p>gusto?</p>
+        <div class="modal-buttons">
+          <button type="button"class="btn primario"id="hide-modal"name="button">Si!</button>
+          <button type="button"class="btn warning"id="pasar"name="button">No!</button>
+        </div>
+      </div>
+    </div>
+    <div id="segunda">
+      <img src="img/meme.jpg"alt="">
+    </div>
+    <script type="text/javascript">
+      const $hideButton = document.getElementById('hide-modal');
+      const $modal = document.getElementById('modal');
+      const $overlay = document.getElementById('overlay');
+      const $salir = document.getElementById('salir');
+      const $pasar = document.getElementById('pasar');
+      const $imagen1 = document.getElementById('imagen1');
+      const $segunda = document.getElementById('segunda');
+      const $openModal = document.getElementById('open');
+
+      $openModal.addEventListener('click', (event) =>{
+        $modal.style.animationPlayState = 'running';
+        $modal.style.animation = 'modalIn .8s forwards';
+        $overlay.classList.add('active');
+      });
+      $hideButton.addEventListener('click', (event) =>{
+        $modal.style.animation = 'modalOut .8s forwards';
+        $overlay.classList.remove('active');
+      });
+      $overlay.addEventListener('click', (event) =>{
+        $modal.style.animation = 'modalOut .8s forwards';
+        $overlay.classList.remove('active');
+      });
+      $salir.addEventListener('click', (event) =>{
+        $modal.style.animation = 'modalOut .8s forwards';
+        $overlay.classList.remove('active');
+      });
+      $pasar.addEventListener('click', (event) =>{
+        $modal.style.animation = 'modalOut .8s forwards';
+        $overlay.classList.remove('active');
+        $openModal.style.display = 'none';
+        $imagen1.style.display = 'none';
+        $segunda.style.visibility = 'visible';
+      });
+    </script>
+  </body>
+</html>
