@@ -18,7 +18,6 @@ document.getElementById('info__time').innerHTML = hours + ":" + mins + ":"+ secs
 }
 setInterval(printTime);
 
-
 let nav = document.getElementsByClassName("nav_link");
 let i;
 
@@ -37,24 +36,33 @@ for (i = 0; i < nav.length; i++) {
 
 
 
-
-
-
-
 // modal
-var $addButton = document.getElementById('add_tread');
-var $cancelButton = document.getElementById('hiden-cancel');
-var $modal = document.getElementById('modal');
-var $form_modal = document.getElementById('form_modal');
 
-// $cancelButton = addEventListener('click', (event) =>{
-//   $modal.style.animation = 'animationOut .8s forwards';
-//   $form_modal.classList.remove('active');
-// });
+const $addButton = document.getElementById('add_tread');
+const $cancelButton = document.getElementById('hiden-cancel');
+const $modal = document.getElementById('modal');
+const $form_modal = document.getElementById('form_modal');
 
-$addButton = addEventListener('click', (event) =>{
-  $modal.style.animation = 'animationIn .8s forwards';
+
+// function addEventClick($event) {
+//   $element.addEventListener('click', () =>{
+//     showModal();
+//   })
+// }
+
+$addButton.addEventListener('click', showModal);
+function showModal(){
   $form_modal.classList.add('active');
-});
+  $modal.style.animation = 'animationIn 1s forwards'
+};
+
+$cancelButton.addEventListener('click', hideModal);
+function hideModal(){
+  $form_modal.classList.remove('active');
+  $modal.style.animation = 'animationOut 3s forwards';
+}
+
+
+
 
 

@@ -213,8 +213,8 @@ td{
 .modal {
 	display: grid;
 	grid-template-areas: "title__from-add title__from-add"
-												"side__left side__right"
-												"btn_form btn_form";
+						 "side__left side__right"
+						 "btn_form btn_form";
 	grid-template-columns: 1fr 1fr;
 	grid-template-rows: 3em 1fr 4em;
 	grid-gap:20px;
@@ -254,7 +254,7 @@ td{
 	width: 100%;
 	height: 100%;
 	visibility: hidden;
-	opacity: 0;
+	opacity: 1;
 	display: flex;
 	justify-content: center;
 	align-items: center;
