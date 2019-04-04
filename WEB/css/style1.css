@@ -210,7 +210,7 @@ td{
 	overflow: hidden;
 	background-color: #273b47;
 	max-height: 0;
-	transition: max-height 0.2 cubic-bezier(.17,.67,.83,.67);
+	transition: height 0.2 cubic-bezier(.17,.67,.83,.67);
  }
 
  .sub__menu li {
@@ -334,6 +334,22 @@ td{
 	background-color:#273b47;
 }
 
+.burger-button {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	display: none;
+	line-height: 40px;
+	text-align: center;
+	position: fixed;
+	z-index: 4;
+	right: 5px;
+	top: 0;
+	color: white;
+	cursor: pointer;
+}
+
+
 /*ANIMACIONES*/
 @keyframes animationIn{
   0% {
@@ -394,6 +410,41 @@ td{
 
 }
 
-@media screen and (min-width: 480px) {
+@media screen and (max-width: 480px) {
+	.container{
+		display: initial;
+	}
+	.burger-button{
+		display: block
+	}
+	.departure {
+		display: flex;
+		justify-content: space-evenly;
+		font-size: .8em;
+		padding: 15px 0;
+	}
+	.header {
+		display: block;
+		height: auto;
+	}
 
+	.header__logo{
+		text-align: initial;
+		margin-left: 15px;
+	}
+
+	.header__logo a{
+		font-size: 1.5em;
+	}
+
+	.header__nav {
+		position:static;
+		display: none;
+	}
+
+	.action_modal {
+		display: initial;
+		overflow: auto;
+		max-width:65%;
+	}
 }
