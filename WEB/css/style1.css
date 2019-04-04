@@ -1,12 +1,11 @@
 /*Iconos*/
-
 @font-face {
   font-family: 'icomoon';
-  src:  url('../fonts/icomoon.eot?qgjpqs');
-  src:  url('../fonts/icomoon.eot?qgjpqs#iefix') format('embedded-opentype'),
-    url('../fonts/icomoon.ttf?qgjpqs') format('truetype'),
-    url('../fonts/icomoon.woff?qgjpqs') format('woff'),
-    url('../fonts/icomoon.svg?qgjpqs#icomoon') format('svg');
+  src:  url('../fonts/icomoon.eot?f6eg17');
+  src:  url('../fonts/icomoon.eot?f6eg17#iefix') format('embedded-opentype'),
+    url('../fonts/icomoon.ttf?f6eg17') format('truetype'),
+    url('../fonts/icomoon.woff?f6eg17') format('woff'),
+    url('../fonts/icomoon.svg?f6eg17#icomoon') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -26,8 +25,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-home3:before {
-  content: "\e902";
+.icon-home:before {
+  content: "\e900";
+}
+.icon-pencil:before {
+  content: "\e905";
+}
+.icon-phone:before {
+  content: "\e942";
 }
 .icon-stopwatch:before {
   content: "\e952";
@@ -35,14 +40,23 @@
 .icon-user:before {
   content: "\e971";
 }
+.icon-user-plus:before {
+  content: "\e973";
+}
+.icon-user-minus:before {
+  content: "\e974";
+}
+.icon-user-check:before {
+  content: "\e975";
+}
 .icon-spinner10:before {
   content: "\e983";
 }
-.icon-wrench:before {
-  content: "\e991";
+.icon-cogs:before {
+  content: "\e995";
 }
-.icon-meter:before {
-  content: "\e9a6";
+.icon-bin:before {
+  content: "\e9ac";
 }
 .icon-truck:before {
   content: "\e9b0";
@@ -50,14 +64,14 @@
 .icon-road:before {
   content: "\e9b1";
 }
-.icon-switch:before {
-  content: "\e9b6";
-}
 .icon-menu:before {
   content: "\e9bd";
 }
-.icon-warning:before {
-  content: "\ea07";
+.icon-enter:before {
+  content: "\ea13";
+}
+.icon-exit:before {
+  content: "\ea14";
 }
 .icon-facebook2:before {
   content: "\ea91";
@@ -65,9 +79,7 @@
 .icon-whatsapp:before {
   content: "\ea93";
 }
-.icon-twitter:before {
-  content: "\ea96";
-}
+
 
 
 /*Iconos*/
@@ -112,6 +124,7 @@ th{
 table,td,th{
   border:1px solid #273b47;
   border-collapse: collapse; /*quitar la doble linea*/
+  text-align: center;
 }
 
 td{
@@ -120,10 +133,10 @@ td{
 
 
 .container {
-	height: 100vh;
+	/*height: 100vh;*/
 	display: grid;
 	grid-template-columns: 20% 1fr;
-	grid-template-rows: 120px auto;
+	grid-template-rows: 4em 1fr;
 	grid-template-areas: "header info"
 						 "header marked";
 
@@ -273,9 +286,7 @@ td{
 	text-align: center;
 }
 
-.action_modal {
 
-}
 .action_modal input{
 	display: block;
 	width: 	10.8em;
@@ -295,14 +306,6 @@ td{
 	margin: 5px auto;
 }
 
-.radio__toobal {
-	display: flex;
-	justify-content: center;
-}
-
-.radio__toobal label  input {
-	width: 10.8em;
-}
 
 .btn {
 	padding: .6em .8em .8em;
@@ -376,11 +379,11 @@ td{
 
 @media screen and (max-width: 768px) {
 	.info {
-		display: flex;
+		display: initial;
 	}
 	.marked{
 		overflow: auto;
-		border:1px solid #273b47;
+
 	}
 	.action_modal{
 		max-width: 400px;
@@ -388,10 +391,6 @@ td{
 	.action_modal input{
 		width:auto;
 	}
-	.estado_form label,.estado_form input {
-		max-width: 80px;
-		padding: 0 10px;
-}
 
 }
 
