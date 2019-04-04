@@ -2,6 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<title>SUIC | Caídas</title>
 		<link href="https://fonts.googleapis.com/css?family=Poppins|Source+Sans+Pro" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="css/style1.css">
@@ -29,37 +30,40 @@
 							<i class="nav__icon icon-road "></i><a href="#">Rodamiento</a>
 						</li>
 						<ul class="sub__menu">
-							<li><a class="add_tread"    href="#">Agregar rodamiento</a></li>
+							<li><a class="add_tread" href="#">Agregar rodamiento</a></li>
 							<li><a href="#">Remover rodamiento</a></li>
+							<li><a href="#">Listar rodamiento</a></li>
 						</ul>
 						<li class = "nav_link" id="nav__link">
 							<i class="nav__icon icon-stopwatch"></i><a href="#">Tiempos</a>
-							<ul class="sub__menu">
-								<li><a href="#">Mirar Tiempos</a></li>
-								<li><a href="#">Consultar Tiempo</a></li>
-							</ul>
 						</li>
+						<ul class="sub__menu">
+							<li><a href="#">Mirar Tiempos</a></li>
+							<li><a href="#">Consultar Tiempo</a></li>
+						</ul>
 						<li class = "nav_link" id="nav__link" >
 							<i class="nav__icon icon-user"></i><a href="#">Operadores</a>
-							<ul class="sub__menu">
-								<li><a href="#">Agregar operador</a></li>
-								<li><a href="#">Remover operador</a></li>
-							</ul>
 						</li>
+						<ul class="sub__menu">
+							<li><a href="#">Agregar operador</a></li>
+							<li><a href="#">Remover operador</a></li>
+							<li><a href="#">Listar operadores</a></li>
+						</ul>
 						<li class = "nav_link" id="nav__link" >
 							<i class="nav__icon icon-spinner10"></i><a href="#">Turnos</a>
-							<ul class="sub__menu">
-								<li><a href="#">Agregar turno</a></li>
-								<li><a href="#">Remover turno</a></li>
-							</ul>
 						</li>
+						<ul class="sub__menu">
+							<li><a href="#">Agregar turno</a></li>
+							<li><a href="#">Remover turno</a></li>
+							<li><a href="#">Listar turnos</a></li>
+						</ul>
 					</ul>
 				</nav>
 			</header>
 			<section class ="info" id="info">
 				<article class = "departure">
 					<div class="location">
-						<h1 class="title__location">Ubicación</h1>
+						<h1 class="title__control">Control</h1>
 					</div>
 					<div class="date">
 						<h1 class="title__date">Fecha</h1>
@@ -76,13 +80,12 @@
 					<table class="info__frame">
 						<thead>
 							<tr>
-								<th>Salida</th>
-								<th>Vehículo</th>
-								<th>Mio</th>
-								<th>42-48</th>
-								<th>Reforma</th>
-								<th>Reloj Ginebra</th>
-								<th>Observación</th>
+								<th>Numero interno</th>
+								<th>Placa</th>
+								<th>Marca</th>
+								<th>Carrocería</th>
+								<th>Consumo</th>
+								<th>Activo</th>
 							</tr>
 						</thead>
 					</table>
@@ -90,7 +93,7 @@
 			</section>
 			<section class="formulario add_vehicle">
 				<div class="form_modal" id="form_modal">
-					<form class="action_modal" action="caidas_submit" method="get" accept-charset="utf-8">
+					<form class="action_modal" action="listVehicle.html" method="get" accept-charset="utf-8">
 						<div class="title__form">
 							<h1 class="">Agregar Vehículo</h1>
 						</div>
@@ -154,15 +157,6 @@
 									<option value="escalera">Escalera</option>
 								</select>
 							</label>
-							<h3 class="radio_title">Estado</h3>
-							<div class="radio__toobal">
-								<label for="activo">Activo
-									<input required type="radio" name="estado" checked value="activo">
-								</label>
-								<label for="desactivo">Desactivo
-									<input required type="radio" name="estado" value="desactivo">
-								</label>
-							</div>
 						</div>
 						<div class="btn_form">
 							<button class="btn btn__add" id="hiden-add" type="submit" value="agregar" target="_blank" >Agregar</button>
@@ -170,9 +164,9 @@
 						</div>
 					</form>
 				</div>
-		</section>
-	</div>
-	<script src="js/application.js">
-	</script>
-</body>
+			</section>
+		</div>
+		<script src="js/application.js">
+		</script>
+	</body>
 </html>

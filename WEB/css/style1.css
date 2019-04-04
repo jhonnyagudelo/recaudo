@@ -278,7 +278,7 @@ td{
 }
 .action_modal input{
 	display: block;
-	width: 	225px;
+	width: 	10.8em;
 	text-align: center;
 	border:1px solid #B9B9B9;
 	border-radius: 6px;
@@ -300,8 +300,8 @@ td{
 	justify-content: center;
 }
 
-.radio__toobal label,.radio__toobal input {
-	max-width: 100px;
+.radio__toobal label  input {
+	width: 10.8em;
 }
 
 .btn {
