@@ -442,6 +442,10 @@ td{
 		display: none;
 	}
 
+	.header__nav.is-active{
+		display: block;
+	}
+
 	.action_modal {
 		display: initial;
 		overflow: auto;

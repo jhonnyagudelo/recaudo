@@ -44,11 +44,6 @@ const $modal = document.getElementById('modal');
 const $form_modal = document.getElementById('form_modal');
 
 
-// function addEventClick($event) {
-//   $element.addEventListener('click', () =>{
-//     showModal();
-//   })
-// }
 
 $addButton.addEventListener('click', showModal);
 function showModal(){
@@ -63,6 +58,29 @@ function hideModal(){
 }
 
 
+//menu
+const $movil = window.matchMedia('screen and (max-width: 480px)');
+const $menu = document.getElementById('header__nav');
+const $burgerButton = document.getElementById('burger-button');
 
+$movil.addListener (validation);
+function validation (event) {
+  if(event.matches) {
+      $burgerButton.addEventListener('click', hideShow);
+  }else {
+    $burgerButton.addEventListener('click',hideShow);
+  }
+};
+validation($movil);
+
+    function hideShow() {
+      if($menu.classList.contains('is-active')) {
+  console.log(event)
+        $menu.classList.remove('is-active');
+
+      }else{
+        $menu.classList.add('is-active');
+      }
+    }
 
 
