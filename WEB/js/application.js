@@ -60,7 +60,7 @@ function hideModal(){
 
 //menu
 const $movil = window.matchMedia('screen and (max-width: 480px)');
-const $menu = document.querySelector('.header__nav');
+const $menu = document.querySelector('.header__nav-ul');
 const $burgerButton = document.querySelector('#burger-button');
 
 $movil.addListener (validation);
