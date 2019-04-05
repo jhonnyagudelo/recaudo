@@ -437,13 +437,13 @@ td{
 		font-size: 1.5em;
 	}
 
-	.header__nav {
+	.header__nav-ul {
 		position:static;
 		display: none;
-		transition: .3s;
+		transition: 5s;
 	}
 
-	.header__nav.is-active{
+	.header__nav-ul.is-active{
 		display: block;
 	}
 
