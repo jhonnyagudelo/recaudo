@@ -423,6 +423,7 @@ td{
 	}
 
 	.header__nav{
+		overflow: auto;
 		position: static;
 		top: 0;
 	}
