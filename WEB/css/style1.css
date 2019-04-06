@@ -141,7 +141,7 @@ td{
 	grid-template-columns: 20% 1fr;
 	grid-template-rows: 4em 1fr;
 	grid-template-areas: "header info"
-						 "header marked";
+									 		 "header marked";
 
 }
 
@@ -412,15 +412,25 @@ td{
 }
 
 @media screen and (max-width: 768px) {
+
 	.info {
 		display: initial;
 	}
+
 	.marked{
 		overflow: auto;
-
 	}
 	.action_modal{
 		max-width: 400px;
+	}
+
+	.header__nav{
+		position: static;
+		top: 0;
+	}
+
+	.nav_link{
+		padding:0.7em 0;
 	}
 	.action_modal input{
 		width:auto;
