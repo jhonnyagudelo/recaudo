@@ -136,10 +136,9 @@ td{
 
 
 .container {
-	/*height: 100vh;*/
 	display: grid;
-	grid-template-columns: 20% 1fr;
-	grid-template-rows: 4em 1fr;
+	grid-template: repeat(2, auto) / auto 1fr;
+	/*grid-template: 20% 1fr / 9em 1fr;*/
 	grid-template-areas: "header info"
 									 		 "header marked";
 
@@ -202,6 +201,7 @@ td{
 .marked {
 	grid-area: marked;
 	padding: .5em;
+	height: calc(100vh - 5em);
 }
 
  .active
@@ -349,12 +349,6 @@ td{
 	cursor: pointer;
 }
 
-.user__main {
-	border-radius: 50%;
-	border-radius: 1px solid white;
-	max-width: auto;
-}
-
 .acciones_icon i{
 	padding: 5px;
 	cursor:pointer;
@@ -417,6 +411,10 @@ td{
 		display: initial;
 	}
 
+	.header {
+		/*height: 100%;*/
+	}
+
 	.marked{
 		overflow: auto;
 	}
@@ -430,7 +428,8 @@ td{
 	}
 
 	.nav_link{
-		padding:0.7em 0;
+		padding: .4em 0;
+		margin: 1.2px 0;
 	}
 	.action_modal input{
 		width:auto;
