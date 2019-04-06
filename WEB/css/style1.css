@@ -412,7 +412,7 @@ td{
 	}
 
 	.header {
-		/*height: 100%;*/
+		overflow: auto;
 	}
 
 	.marked{
@@ -423,7 +423,6 @@ td{
 	}
 
 	.header__nav{
-		overflow: auto;
 		position: static;
 		top: 0;
 	}
