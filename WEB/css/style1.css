@@ -136,7 +136,7 @@ td{
 
 .container {
 	display: grid;
-	grid-template: repeat(2, auto) / auto 1fr;
+	grid-template: 100px 1fr / auto 1fr;
 	grid-template-areas: "header info"
 									 		 "header marked";
 
@@ -195,12 +195,13 @@ td{
 .departure {
 	display: flex;
 	justify-content: space-evenly;
+	padding: 20px;
 }
 .marked {
 	grid-area: marked;
 	padding: .5em;
 	overflow: auto;
-	height: calc(100vh - 10em);
+	/*height: calc(100vh - 4em);*/
 }
 
  .active
