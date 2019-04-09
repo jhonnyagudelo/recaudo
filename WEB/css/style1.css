@@ -147,7 +147,7 @@ td{
 	background-color: #23475B;
 	color:white;
 	height:  100vh;
-	overflow: auto;
+	/*overflow: auto;*/
 
 }
 
@@ -213,7 +213,7 @@ td{
 	overflow: hidden;
 	background-color: #273b47;
 	max-height: 0;
-	transition: height 0.2 cubic-bezier(.17,.67,.83,.67);
+	transition: .3s cubic-bezier(.17,.67,.83,.67);
  }
 
  .sub__menu li {
