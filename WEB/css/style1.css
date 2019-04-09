@@ -122,15 +122,14 @@ table{
 th{
   /*background:#273b47;*/
   color:black;
-  /*padding:10px 20px;*/
+  padding: 0 20px;
   text-align: center;
   width: 8em;
 }
 
 
 td{
-  width: 8em;
-  width: 120px;
+  width: 7.3em;
   padding: .1em;
 }
 
@@ -138,7 +137,6 @@ td{
 .container {
 	display: grid;
 	grid-template: repeat(2, auto) / auto 1fr;
-	/*grid-template: 20% 1fr / 9em 1fr;*/
 	grid-template-areas: "header info"
 									 		 "header marked";
 
@@ -355,48 +353,81 @@ td{
 }
 
 .acciones_icon i:hover{
-	color: #273b47;
+	color: #C8C8C8;
 }
 
 .icon-bin{
 	margin-left: 5px;
 }
 
-/*ANIMACIONES*/
-@keyframes animationIn{
-  0% {
-    transform: translateY(-3000px);
-  }
-  60% {
-    transform: translateY(25px);
-  }
-  75% {
-    transform: translateY(-10px);
-  }
-  90% {
-    transform: translateY(5px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
+/*SWITH*/
+.onoffswitch__form{
+	display: flex;
+	justify-content: center;
 }
 
-		@keyframes animationOut{
-  0% {
-    transform: translateY(5px);
-  }
-  60% {
-    transform: translateY(-10px);
-  }
-  75% {
-    transform: translateY(25px);
-  }
-  100% {
-    transform: translateY(-3000px);
-  }
+.onoffswitch {
+position: relative;
+width:50px;
 }
 
-/*ANIMACIONES*/
+.onoffswitch-checkbox{
+	display: none;
+}
+.onoffswitch-label {
+	display: block;
+	overflow: hidden;
+	cursor: pointer;
+	border:1px solid white  ;
+	border-radius: 20px;
+}
+
+.onoffswitch-inner {
+	display: block;
+	width: 200%;
+	margin-left: -100%;
+	transition: margin .3s ease-out;
+}
+
+.onoffswitch-inner:before, .onoffswitch-inner:after {
+	display: block;
+	float:left;
+	width: 50%;
+	height: 20px;
+	padding: 0;
+	line-height: 20px;
+	font-size: 14px;
+	color:white;
+	font-family: 'Poppins', sans-serif;
+	box-sizing: border-box;
+}
+
+
+.onoffswitch-inner:before{
+	content: "On";
+	padding-left: 5px;
+	background-color: #2E654A;
+	color:white;
+}
+
+.onoffswitch-inner:after{
+	content: "Off";
+	padding-right: 5px;
+	background-color: white;
+	color: #9C9C9C;
+	text-align: center;
+}
+    .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
+        margin-left: 0;
+    }
+    .onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
+        right: 0px;
+    }
+
+
+
+
+/*SWITH*/
 
 
 /*RESPONSIVE DESING*/
@@ -487,3 +518,42 @@ td{
 		max-width:65%;
 	}
 }
+
+
+
+
+/*ANIMACIONES*/
+@keyframes animationIn{
+  0% {
+    transform: translateY(-3000px);
+  }
+  60% {
+    transform: translateY(25px);
+  }
+  75% {
+    transform: translateY(-10px);
+  }
+  90% {
+    transform: translateY(5px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+		@keyframes animationOut{
+  0% {
+    transform: translateY(5px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+  75% {
+    transform: translateY(25px);
+  }
+  100% {
+    transform: translateY(-3000px);
+  }
+}
+
+/*ANIMACIONES*/

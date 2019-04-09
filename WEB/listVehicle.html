@@ -98,8 +98,14 @@
 				<td>cerrada</td>
 				<td>35g</td>
 				<td>
-					<form action="listVehicle_submit" method="get" accept-charset="utf-8">
-						<label class="switch"><input type="checkbox" name="" value=""><span class="slider round"></span></label>
+					<form class="onoffswitch__form" action="listVehicle_submit" method="get" accept-charset="utf-8">
+						<div class="onoffswitch">
+							<input type="checkbox" name="onoffswitch" class="onoffswitch-checkbox" id="myonoffswitch" checked>
+							<label class="onoffswitch-label" for="myonoffswitch">
+								<span class="onoffswitch-inner"></span>
+								<span class="onoffswitch-switch"></span>
+							</label>
+						</div>
 					</form>
 				</td>
 				<td>
