@@ -40,7 +40,7 @@ setInterval(printTime);
 
 const $addButton = document.getElementById('add_tread');
 const $cancelButton = document.getElementById('hiden-cancel');
-const $modal = document.getElementById('modal');
+// const $modal = document.getElementById('action_modal');
 const $form_modal = document.getElementById('form_modal');
 
 
@@ -56,6 +56,16 @@ function hideModal(){
   $form_modal.classList.remove('active');
   $modal.style.animation = 'animationOut 3s forwards';
 }
+
+
+//modal_remove
+const $deleteBus = document.querySelector('.delete__bus');
+const $modalRemove = document.querySelector('.moda__vehicle-remov');
+// const $modalRemove = document.querySelector('.moda__vehicle-remov');
+
+
+
+
 
 
 //menu
