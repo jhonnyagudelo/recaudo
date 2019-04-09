@@ -40,7 +40,7 @@ setInterval(printTime);
 
 const $addButton = document.getElementById('add_tread');
 const $cancelButton = document.getElementById('hiden-cancel');
-// const $modal = document.getElementById('action_modal');
+const $modal = document.getElementById('modal');
 const $form_modal = document.getElementById('form_modal');
 
 
