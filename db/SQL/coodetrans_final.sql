@@ -6,6 +6,18 @@
     - fuera de servicio
 */
 
+-- SECUENCIA
+CREATE SEQUENCE sec_turns
+START with 1
+INCREMENT BY 1
+MINVALUE 1
+MAXVALUE 8
+-- RESTART 1
+CYCLE;
+
+SELECT * FROM "sec_truns";
+SELECT NEXTVAL('sec_turns');
+
 CREATE OR REPLACE FUNCTION turns(num_vehiculo INT, idruta INT,num_turno INT, salida TIME, mensaje VARCHAR(50) DEFAULT 'Sin novedad') RETURNS VOID AS $$
 DECLARE
 

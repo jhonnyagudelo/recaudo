@@ -467,9 +467,9 @@ width:50px;
 		max-width: 400px;
 	}
 
-	/*.header{
+	.header{
 		overflow: auto;
-	}*/
+	}
 
 	.header__nav{
 		position: static;
@@ -534,9 +534,9 @@ width:50px;
 
 
 	.action_modal {
-		display: initial;
+		width: auto;
+		display: block;
 		overflow: auto;
-		max-width:65%;
 	}
 }
 

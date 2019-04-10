@@ -34,10 +34,27 @@ setInterval(printTime);
   }
 
 
+//modal_remove
+const $removeButton = document.querySelector('.delete__bus');
+const $modalRemove = document.querySelector('.moda__vehicle-remove');
+const $removeBus = document.getElementById('modal-remove')
+const $cancelRemove = document.getElementById('remove-cancel');
+
+$removeButton.addEventListener('click', showModalremove);
+function showModalremove(){
+  $modalRemove.classList.add('active');
+  $removeBus.style.animation = 'animationIn 1s forwards'
+};
+
+$cancelRemove.addEventListener('click', hideModalremove);
+function hideModalremove(){
+  $modalRemove.classList.remove('active');
+  $removeBus.style.animation = 'animationOut 1s forwards';
+}
+
 
 
 // modal
-
 const $addButton = document.getElementById('add_tread');
 const $cancelButton = document.getElementById('hiden-cancel');
 const $modal = document.getElementById('modal');
@@ -56,16 +73,6 @@ function hideModal(){
   $form_modal.classList.remove('active');
   $modal.style.animation = 'animationOut 3s forwards';
 }
-
-
-//modal_remove
-const $deleteBus = document.querySelector('.delete__bus');
-const $modalRemove = document.querySelector('.moda__vehicle-remov');
-// const $modalRemove = document.querySelector('.moda__vehicle-remov');
-
-
-
-
 
 
 //menu
@@ -92,5 +99,6 @@ validation($movil);
         $menu.classList.add('is-active');
       }
     }
+
 
 
