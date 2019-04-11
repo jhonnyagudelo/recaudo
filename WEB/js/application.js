@@ -5,15 +5,23 @@ let meses = new Array ("Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio",
 	let diasSemana = new Array("Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado");
 	let f=new Date();
 	const day = document.getElementById('info__date');
-	day.innerHTML =(diasSemana[f.getDay()] + ", " + f.getDate() + " de " + meses[f.getMonth()] + " de " + f.getFullYear());
-	// day.innerHTML ='(diasSemana[f.getDay()] + ", " + f.getDate() + " de " + meses[f.getMonth()] + " de " + f.getFullYear());'
+	day.innerHTML =(diasSemana[f.getDay()]  + "<br/> "+ meses[f.getMonth()] +"  " + f.getDate() +   " del " + f.getFullYear());
+
 
 //hora
+
+function addCero(i) {
+ if (i < 10) {
+    i = "0" + i;
+ }
+  return i;
+}
+
 function printTime (){
 let d = new Date();
-let hours = d.getHours();
-let mins = d.getMinutes();
-let secs = d.getSeconds();
+let hours =  addCero(d.getHours());
+let mins = addCero(d.getMinutes());
+let secs = addCero(d.getSeconds());
 document.getElementById('info__time').innerHTML = hours + ":" + mins + ":"+ secs;
 }
 setInterval(printTime);
@@ -53,9 +61,8 @@ function hideModalremove(){
 }
 
 
-
 // modal
-const $addButton = document.getElementById('add_tread');
+const $addButton = document.getElementById('add_vehicle');
 const $cancelButton = document.getElementById('hiden-cancel');
 const $modal = document.getElementById('modal');
 const $form_modal = document.getElementById('form_modal');
