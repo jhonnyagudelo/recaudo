@@ -61,7 +61,7 @@ $gasto_turno$ LANGUAGE plpgsql VOLATILE;
 
 
  CREATE TRIGGER insert_gasto_turn
- AFTER UPDATE ON costo_turno
+ AFTER UPDATE ON costo_turnos
  FOR EACH ROW
  EXECUTE PROCEDURE trigg_shift_expense();
 

@@ -1,12 +1,11 @@
 -------------------------------------------------------------------------------------------------------------------------------PRADERA--------------------------------------------
-CREATE OR REPLACE VIEW vista_pradera (id_turno)AS
+
 /*
  * Author: Jhonny Stiven Agudelo Tenorio
  * Purpose: mostrar tirilla de marcada
  * statement in PostgreSQL.
  */
 WITH turn(id_turno) AS (
-
 
 	VALUES(1)
 	)

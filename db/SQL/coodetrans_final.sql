@@ -4,6 +4,13 @@
     - rodamiento
     - taller
     - fuera de servicio
+
+
+
+
+    buscar vehiculo, del ultimo turno.. consulta por vehiculo con el ultimo turno que tenga.
+
+    para los turnos buscar el ultimo y sumarle uno.
 */
 
 -- SECUENCIA
@@ -41,7 +48,7 @@ INSERT INTO
       ,mensaje
     FROM vehiculos v_r
       INNER JOIN rodamientos r_ct
-        ON v_r.numero_interno = r_ct.numero_interno
+        ON v_r.vehiculo_id = r_ct.vehiculo_id
     WHERE TRUE
     AND CURRENT_DATE::TIMESTAMP <= r_ct.create_at
     AND v_r.numero_interno = num_vehiculo
@@ -49,6 +56,30 @@ INSERT INTO
 
 END;
 $$ LANGUAGE plpgsql VOLATILE;
+
+-----------------------------------------rodamientos--------------------------------------------------
+CREATE OR REPLACE FUNCTION  add_tread( despacho INT, interno INT, planilla INT DEFAULT 0 ) RETURNS VOID AS $$
+/*
+ * Author: Jhonny Stiven Agudelo Tenorio
+ * Purpose: Insertar turno
+ * statement in PostgreSQL.
+ */
+BEGIN
+INSERT INTO
+  rodamientos(numero_planilla, despacho_id, vehiculo_id, numero_interno)
+    SELECT
+      planilla
+      ,despacho
+      ,v_h.vehiculo_id
+      ,interno
+    FROM vehiculos v_h
+      WHERE TRUE
+      AND v_h.numero_interno = interno
+      ORDER BY vehiculo_id DESC LIMIT 1;
+END;
+$$ LANGUAGE plpgsql VOLATILE;
+
+
 
 ---------------------------------tiempos de marcada--------------------------------------------
 
@@ -91,13 +122,13 @@ DECLARE
         ON rr_r.id_reloj = rl.id_reloj
     WHERE TRUE
       AND t.id_turno = NEW.id_turno
-      ORDER BY rr_r.id_ruta_reloj;
+      ORDER BY rr_r.tiempo_max;
   END IF;
   RETURN NEW;
   END;
-  $_time$ LANGUAGE plpgsql;
+  $_time$ LANGUAGE plpgsql VOLATILE;
 
-  CREATE TRIGGER after_insert_turn
+  CREATE TRIGGER after_insert_time
   AFTER INSERT ON turnos
   FOR EACH ROW
   EXECUTE PROCEDURE add_turn_time();
@@ -118,7 +149,7 @@ DECLARE
   UPDATE tiempos SET tiempo_marcada = time_marked
     WHERE id_tiempo = idtiempo;
   END;
-  $marcada$ LANGUAGE plpgsql;
+  $marcada$ LANGUAGE plpgsql VOLATILE;
 ----------------------------trigger tiempo de marcada------------------------------------------
 CREATE OR REPLACE FUNCTION trigg_marked() RETURNS TRIGGER AS $marcada$
 /*
@@ -136,7 +167,7 @@ UPDATE tiempos
 END IF;
 RETURN NEW;
 END;
-$marcada$ LANGUAGE plpgsql;
+$marcada$ LANGUAGE plpgsql VOLATILE;
 
   CREATE TRIGGER update_trigg_marked
   AFTER UPDATE OF tiempo_marcada ON tiempos
@@ -157,22 +188,14 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
    * Purpose: Costo ruta
    * statement in PostgreSQL.
    */
-  DECLARE
-  data_costo_turno RECORD;
-  BEGIN
-      SELECT *
-        INTO
-        data_costo_turno
-        FROM costo_turnos
-        WHERE TRUE
-        AND id_turno = OLD.id_turno ;
 
-        IF NOT FOUND
+  BEGIN
+  IF(TG_OP='INSERT') THEN
           INSERT INTO costo_turnos (
             id_turno
             ,costo_positivo
             ,bea_neto
-            ,bea_neto_total
+            -- ,bea_neto_total
             ,vehiculo
             ,numero_turno
             )
@@ -180,13 +203,19 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
              NEW.id_turno
              ,CASE
                 WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
-                (CASE WHEN t.positivo >= t_rt.num_positivo
+
+                  (CASE WHEN t.positivo >= t_rt.num_positivo
+
                     THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
+
                   ELSE 0 END ) END AS costo_positivo
 
-             ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
+             ,CASE
+                WHEN r_t.id_ayuda = aa_v.id_ayuda THEN
+                  t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
 
              -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
+             --colocar los 2 otras ves
 
              ,t.vehiculo
              ,t.numero_turno
@@ -194,7 +223,7 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
             INNER JOIN rodamientos rd_t
               ON t.rodamiento_id = rd_t.id_rodamiento
             INNER JOIN vehiculos v_r
-              ON  v_r.numero_interno = rd_t.numero_interno
+              ON  v_r.vehiculo_id = rd_t.vehiculo_id
             INNER JOIN rutas r_t
               ON t.id_ruta = r_t.id_ruta
             LEFT JOIN ayuda_auxiliar aa_v
@@ -203,24 +232,19 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
               ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
             WHERE TRUE
             AND t.id_turno = NEW.id_turno;
-
-            ELSE
-              UPDATE
         END IF;
       RETURN NEW;
       END;
     $costo_turno$ LANGUAGE plpgsql VOLATILE;
 
-CREATE TRIGGER after_cost_turn
-  AFTER UPDATE ON turnos
-  FOR EACH ROW
-  EXECUTE PROCEDURE trigg_shift_cost();
+CREATE TRIGGER insert_cost_turn
+ AFTER UPDATE ON turnos
+ FOR EACH ROW
+ EXECUTE PROCEDURE trigg_shift_cost();
 
-CREATE TRIGGER before_bea_bruta_turn
-  AFTER UPDATE ON turnos
-  FOR EACH ROW
-  WHEN(OLD.bea_bruto IS DISTINCT FROM NEW.bea_bruto)
-  EXECUTE PROCEDURE trigg_shift_cost();
+
+
+
 -----------------------------------------gasto_turno--------------------------------------------------------
 
 
@@ -296,15 +320,12 @@ END;
 $gasto_turno$ LANGUAGE plpgsql VOLATILE;
 
 
- CREATE TRIGGER insert_gasto_turn
- AFTER INSERT ON costo_turnos
+CREATE TRIGGER insert_gasto_turn
+ AFTER UPDATE ON costo_turnos
  FOR EACH ROW
  EXECUTE PROCEDURE trigg_shift_expense();
 
- CREATE TRIGGER updated_gasto_turn
- BEFORE UPDATE ON costo_turnos
- FOR EACH ROW
- EXECUTE PROCEDURE trigg_shift_expense();
+
 
 
 -----------------------------------------------actualizar update_at------------------------------
@@ -320,29 +341,85 @@ $$ LANGUAGE plpgsql VOLATILE;
 CREATE TRIGGER update_turns_modtime
 BEFORE UPDATE ON turnos
 FOR EACH ROW
-WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 CREATE TRIGGER update_shift_modtime
 BEFORE UPDATE ON gasto_turnos
 FOR EACH ROW
-WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 CREATE TRIGGER update_combustible_modtime
 BEFORE UPDATE ON combustibles
 FOR EACH ROW
-WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 CREATE TRIGGER update_tarifa_modtime
 BEFORE UPDATE ON tarifa_positivos
 FOR EACH ROW
-WHEN (OLD.update_at IS NOT DISTINCT NEW.update_at)
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_vehiculos_modtime
+BEFORE UPDATE ON vehiculos
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_peaje_modtime
+BEFORE UPDATE ON peajes
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_personas_modtime
+BEFORE UPDATE ON personas
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_ruta_modtime
+BEFORE UPDATE ON rutas
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_relojes_modtime
+BEFORE UPDATE ON relojes
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_salarios_modtime
+BEFORE UPDATE ON salarios
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_tiempos_modtime
+BEFORE UPDATE ON tiempos
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+CREATE TRIGGER update_tasa_modtime
+BEFORE UPDATE ON tasa
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 
- ---------------------------------------liquidacion_turno-------------------------------------------------
+CREATE TRIGGER update_usuarios_modtime
+BEFORE UPDATE ON usuarios
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+
+
+---------------------------------------liquidacion_turno-------------------------------------------------
 CREATE OR REPLACE FUNCTION payment_turn() RETURNS TRIGGER AS $liquidacion_turno$
   /*
    * Author: Jhonny Stiven Agudelo Tenorio

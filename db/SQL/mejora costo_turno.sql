@@ -303,15 +303,15 @@ RETURNING *;
               ,positivo = 0
               ,bloqueo = 0
               ,velocidad = 97
-              ,bea_bruto = 150000
-              ,vehiculo = 7118
+              ,bea_bruto = 80000
+              ,vehiculo = 7018
               FROM vehiculos v_r
                 INNER JOIN rodamientos r_ct
                   ON v_r.numero_interno = r_ct.numero_interno
               WHERE TRUE
-              AND v_r.numero_interno = 4001
-              RETURNING id_turno;
-
+              AND v_r.numero_interno = 7018
+              AND numero_turno = 2
+              RETURNING id_turno,bea_bruto,v_r.vehiculo_id;
           )
         SELECT * FROM turnos WHERE id_turno IN (SELECT id_turno FROM updated_at
         WHERE TRUE

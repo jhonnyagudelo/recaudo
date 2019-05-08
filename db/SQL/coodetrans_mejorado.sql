@@ -150,6 +150,7 @@ DECLARE
        END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
+
     FROM turno t
       INNER JOIN rutas r
         ON t.id_ruta = r.id_ruta
