@@ -102,13 +102,12 @@ DECLARE
     )
     SELECT
       NEW.id_turno
-      ,CASE
-       WHEN t.hora_salida < t_e.hora
-             THEN t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
-       WHEN t.hora_salida >= t_e.hora
-            THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
-       ELSE t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
-       END AS tiempo_max
+    ,CASE
+            WHEN TRUE
+              AND t.hora_salida >= t_e.hora
+                THEN t.hora_salida + (t_e.tiempo_adicional || 'minute')::INTERVAL
+            ELSE t.hora_salida + (rr_r.tiempo_max || 'minute')::INTERVAL
+            END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
     FROM turnos t
@@ -211,8 +210,10 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
                   ELSE 0 END ) END AS costo_positivo
 
              ,CASE
-                WHEN r_t.id_ayuda = aa_v.id_ayuda THEN
-                  t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
+                WHEN TRUE
+                  AND r_t.id_ayuda = aa_v.id_ayuda
+                    THEN t.bea_bruto - aa_v.precio
+                ELSE bea_bruto END AS bea_neto
 
              -- ,bea_neto_total = (bea_neto + costo_positivo)::DOUBLE PRECISION
              --colocar los 2 otras ves
@@ -277,16 +278,19 @@ BEGIN
       ,COALESCE(p_r.precio_peaje, 0) AS peaje
 
       ,CASE
-            WHEN s_r.salario_id = r.salario_id
-              THEN ct_t.bea_neto * s_r.valor_salario
+            WHEN TRUE
+              AND s_r.salario_id = r.salario_id
+                THEN ct_t.bea_neto * s_r.valor_salario
       END AS pago_conductor
 
       ,COALESCE(r_d.precio_unico, 0) AS descuento
 
       ,COALESCE(r_t.precio, 0) AS conduce
 
-      ,CASE WHEN r.combustible_id = r_c.combustible_id
-        THEN ROUND(r.kilometros / v_t.consumo_galon::double precision) * r_c.precio_galon
+      ,CASE
+          WHEN TRUE
+            AND r.combustible_id = r_c.combustible_id
+              THEN ROUND(r.kilometros / v_t.consumo_galon::double precision) * r_c.precio_galon
           ELSE 0
       END AS combustible
 
@@ -416,6 +420,65 @@ BEFORE UPDATE ON usuarios
 FOR EACH ROW
 WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
+
+------------------------------------------RECAUDO MARCADA--------MEJORAR----------------------------
+CREATE OR REPLACE FUNCTION recaudo_marcadas(INT, INT, DATE) RETURNS SETOF record
+  AS
+    $$
+
+BEGIN
+
+WITH turn(autobus, turno, fecha) AS (
+  VALUES($1, $2, $3::DATE )
+  )
+,data_marcada AS(
+  SELECT
+    t.id_turno
+    ,t.numero_turno
+    ,tp.nombre_marcada
+    ,t.hora_salida
+    ,tp.tiempo_max
+    ,tp.tiempo_marcada
+    ,tp.numero_caida
+    ,t.vehiculo
+    ,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
+            OVER(
+              PARTITION BY tp.id_turno
+              ) AS total_caida
+
+    ,CASE
+        WHEN TRUE
+          AND tp.numero_caida >=1
+            THEN tp.numero_caida * 5000
+      ELSE 0
+    END AS cancelar
+    FROM turn tn
+      INNER JOIN turnos t
+        ON tn.turno = t.id_turno
+        AND tn.autobus = t.vehiculo
+        AND tn.fecha::DATE = t.create_at::DATE
+      LEFT JOIN tiempos tp
+        ON tp.id_turno = t.id_turno
+      WHERE TRUE
+      ORDER BY tp.tiempo_max, t.id_turno
+  )
+  SELECT
+  d_m.id_turno
+  ,d_m.numero_turno
+  ,d_m.nombre_marcada
+  ,d_m.hora_salida
+  ,d_m.tiempo_max
+  ,d_m.tiempo_marcada
+  ,d_m.numero_caida
+  ,d_m.total_caida
+  ,d_m.cancelar
+  ,SUM(d_m.cancelar)OVER( PARTITION BY d_m.total_caida ) AS total_cancelar
+FROM data_marcada d_m;
+$$
+LANGUAGE SQL
+  IMMUTABLE;
+
+
 
 
 
