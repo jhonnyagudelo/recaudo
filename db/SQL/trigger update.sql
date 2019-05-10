@@ -32,27 +32,36 @@ BEGIN
 		    SELECT
 		     NEW.id_turno
 		     ,CASE
-		        WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
-		        (CASE WHEN dc_t.positivo >= t_rt.num_positivo
+		        WHEN TRUE
+              AND r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
+		        (CASE
+                 WHEN TRUE
+                    AND dc_t.positivo >= t_rt.num_positivo
 		            THEN (dc_t.positivo * t_rt.valor_ruta) * t_rt.costo
-		          ELSE 0 END ) END AS costo_positivo
+		                   ELSE 0 END )
+          END AS costo_positivo
 
-		     ,CASE WHEN r_t.id_ayuda = aa_v.id_ayuda THEN t.bea_bruto - aa_v.precio ELSE bea_bruto END AS bea_neto
+		     ,CASE
+            WHEN TRUE
+              AND r_t.id_ayuda = aa_v.id_ayuda
+                THEN t.bea_bruto - aa_v.precio
+          ELSE bea_bruto
+          END AS bea_neto
 
 		     ,dc_t.vehiculo
 		     ,dc_t.numero_turno
 		    FROM data_costo_turno dc_t
-		    INNER JOIN rodamientos rd_t
-		      ON dc_t.rodamiento_id = rd_t.id_rodamiento
-		    INNER JOIN vehiculos v_r
-		      ON  v_r.numero_interno = rd_t.numero_interno
-		    INNER JOIN rutas r_t
-		      ON dc_t.id_ruta = r_t.id_ruta
-		    LEFT JOIN ayuda_auxiliar aa_v
-		      ON  r_t.id_ayuda = aa_v.id_ayuda
-		    LEFT JOIN  tarifa_positivos t_rt
-		      ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
-		    WHERE TRUE
+  		    INNER JOIN rodamientos rd_t
+  		      ON dc_t.rodamiento_id = rd_t.id_rodamiento
+  		    INNER JOIN vehiculos v_r
+  		      ON  v_r.numero_interno = rd_t.numero_interno
+  		    INNER JOIN rutas r_t
+  		      ON dc_t.id_ruta = r_t.id_ruta
+  		    LEFT JOIN ayuda_auxiliar aa_v
+  		      ON  r_t.id_ayuda = aa_v.id_ayuda
+  		    LEFT JOIN  tarifa_positivos t_rt
+  		      ON r_t.tarifa_positivo_id =  t_rt.tarifa_positivo_id
+  		    WHERE TRUE
 		    AND dc_t.id_turno = NEW.id_turno
 		    AND id_costo_turno IS NULL
 		   )
@@ -61,20 +70,22 @@ BEGIN
 			UPDATE costo_turno SET
 				costo_positivo = d_t.costo_positivo
 				,bea_neto = d_t.bea_neto
-				FROM data_turno d_t
+			FROM data_turno d_t
 					WHERE TRUE
 					AND id_costo_turno IS NOT NULL
 			)
 
-  , choose_data (_insert, _update) AS (
-      SELECT FROM insert_data
+  , choose_data (_bea_neto, _update) AS (
+      SELECT  FROM insert_data,
         UNION
   		SELECT * FROM update_date
     )
 
   , process AS (
     SELECT
-      COALESCE()
+      (COALESCE()
+
+        )
 
     )
 
@@ -89,12 +100,21 @@ $costo_turno$ LANGUAGE plpgsql VOLATILE;
 
 ---------------------------------------------
 
+CREATE OR REPLACE FUNCTION fn_horas_laborales(TIMESTAMP, TIMESTAMP) RETURNS INTERVAL
+    AS
+        $$
+            /**
+            *   BRYAN CALERO
+            */
+            WITH t (t_id, t_start, t_end) AS (
+                VALUES
+                    (1,  $1, $2)
+            )
             , var (dia, v_start, v_end) AS (
                 SELECT gs.dia, '08:00:00'::TIME, '18:00:00'::TIME FROM generate_series (1, 5) gs (dia) /* LUNES - VIERNES */
                 UNION ALL
                 SELECT gs.dia, '08:00:00'::TIME, '12:00:00'::TIME FROM generate_series (6, 6) gs (dia) /* SABADO */
             )
-
             , data_procesa AS (
                 SELECT
                     (COALESCE(h.h, 0::INT * INTERVAL '1h')
@@ -144,8 +164,14 @@ $costo_turno$ LANGUAGE plpgsql VOLATILE;
                     AND t.t_start < t.t_end
                 ORDER  BY 1
             )
-
-
+            SELECT
+                justify_interval(COALESCE(p.work_interval, 0::INT * INTERVAL '1h'))
+                /*EXTRACT(epoch FROM fn_horas_laborales('2019-03-04 08:00:00'::TIMESTAMP, '2019-04-05 12:00:00'::TIMESTAMP)) / 3600*/ /*PARA OBTENER LAS HORAS EN NUMEROS*/
+            FROM data_procesa p;
+        $$
+    LANGUAGE SQL
+    IMMUTABLE
+;
 
 
 

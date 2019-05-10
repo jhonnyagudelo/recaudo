@@ -99,6 +99,7 @@ DECLARE
       ,tiempo_max
       ,nombre_marcada
       ,num_vehiculo
+      ,numero_turno
     )
     SELECT
       NEW.id_turno
@@ -110,6 +111,7 @@ DECLARE
             END AS tiempo_max
        ,nombre_reloj
        ,vehiculo
+       ,numero_turno
     FROM turnos t
       INNER JOIN rutas r
         ON t.id_ruta = r.id_ruta
@@ -422,11 +424,9 @@ WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 ------------------------------------------RECAUDO MARCADA--------MEJORAR----------------------------
-CREATE OR REPLACE FUNCTION recaudo_marcadas(INT, INT, DATE) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION recaudo_marcadas(INT, INT, DATE) RETURNS SETOF RECORD
   AS
     $$
-
-BEGIN
 
 WITH turn(autobus, turno, fecha) AS (
   VALUES($1, $2, $3::DATE )
@@ -452,15 +452,16 @@ WITH turn(autobus, turno, fecha) AS (
             THEN tp.numero_caida * 5000
       ELSE 0
     END AS cancelar
+
     FROM turn tn
       INNER JOIN turnos t
-        ON tn.turno = t.id_turno
-        AND tn.autobus = t.vehiculo
-        AND tn.fecha::DATE = t.create_at::DATE
+        ON tn.autobus = t.vehiculo
       LEFT JOIN tiempos tp
         ON tp.id_turno = t.id_turno
       WHERE TRUE
-      ORDER BY tp.tiempo_max, t.id_turno
+        AND tn.fecha::DATE = t.create_at::DATE
+        AND tp.numero_turno = turno
+        ORDER BY tp.tiempo_max, t.id_turno
   )
   SELECT
   d_m.id_turno
@@ -472,6 +473,7 @@ WITH turn(autobus, turno, fecha) AS (
   ,d_m.numero_caida
   ,d_m.total_caida
   ,d_m.cancelar
+  ,d_m.vehiculo
   ,SUM(d_m.cancelar)OVER( PARTITION BY d_m.total_caida ) AS total_cancelar
 FROM data_marcada d_m;
 $$
