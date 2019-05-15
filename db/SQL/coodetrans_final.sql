@@ -141,12 +141,7 @@ CREATE OR REPLACE FUNCTION marked(idtiempo INT,time_marked TIME) RETURNS VOID AS
  * Purpose: Insertar tiempos
  * statement in PostgreSQL.
  */
-
-DECLARE
-    tiempomax TIME;
-  BEGIN
-  tiempomax:=(SELECT tiempo_max FROM tiempos WHERE id_tiempo = idtiempo);
-
+BEGIN
   UPDATE tiempos SET tiempo_marcada = time_marked
     WHERE id_tiempo = idtiempo;
   END;
@@ -424,23 +419,40 @@ WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
 
 ------------------------------------------RECAUDO MARCADA--------MEJORAR----------------------------
-CREATE OR REPLACE FUNCTION recaudo_marcadas(INT, INT, DATE) RETURNS SETOF RECORD
+
+---------------------------------------------------------------------------------------------------
+
+
+CREATE OR REPLACE FUNCTION recaudo_marcadas(INT, INT, DATE) RETURNS
+  TABLE(id_turno INT
+    ,vehiculo INT
+    ,numero_turno INT
+    ,nombre_marcada varchar
+    ,hora_salida TIME
+    ,tiempo_max TIME
+    ,tiempo_marcada TIME
+    ,numero_caida INT
+    ,total_caida INT
+    ,cancelar DOUBLE PRECISION
+    ,total_cancelar DOUBLE PRECISION)
   AS
     $$
+BEGIN
 
+    RETURN QUERY
 WITH turn(autobus, turno, fecha) AS (
   VALUES($1, $2, $3::DATE )
   )
 ,data_marcada AS(
   SELECT
     t.id_turno
+    ,t.vehiculo
     ,t.numero_turno
     ,tp.nombre_marcada
     ,t.hora_salida
     ,tp.tiempo_max
     ,tp.tiempo_marcada
     ,tp.numero_caida
-    ,t.vehiculo
     ,SUM(CASE WHEN tp.numero_caida >=1 THEN tp.numero_caida ELSE 0 END)
             OVER(
               PARTITION BY tp.id_turno
@@ -465,21 +477,21 @@ WITH turn(autobus, turno, fecha) AS (
   )
   SELECT
   d_m.id_turno
+  ,d_m.vehiculo
   ,d_m.numero_turno
   ,d_m.nombre_marcada
   ,d_m.hora_salida
   ,d_m.tiempo_max
   ,d_m.tiempo_marcada
   ,d_m.numero_caida
-  ,d_m.total_caida
-  ,d_m.cancelar
-  ,d_m.vehiculo
-  ,SUM(d_m.cancelar)OVER( PARTITION BY d_m.total_caida ) AS total_cancelar
+  ,d_m.total_caida::INT
+  ,d_m.cancelar::DOUBLE PRECISION
+  ,SUM(d_m.cancelar)OVER( PARTITION BY d_m.total_caida )::DOUBLE PRECISION AS total_cancelar
 FROM data_marcada d_m;
+END;
 $$
-LANGUAGE SQL
-  IMMUTABLE;
-
+LANGUAGE plpgsql
+  VOLATILE;
 
 
 
