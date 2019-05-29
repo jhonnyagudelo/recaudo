@@ -1,4 +1,4 @@
-ZCREATE OR REPLACE FUNCTION recaudo_marcadas( INT,  INT) RETURNS SETOF record
+CREATE OR REPLACE FUNCTION recaudo_marcadas( INT,  INT) RETURNS SETOF record
   AS
     $$
 
@@ -174,7 +174,7 @@ WITH turn(autobus, turno, fecha) AS (
         ON tp.id_turno = t.id_turno
       WHERE TRUE
         AND tn.fecha::DATE = t.create_at::DATE
-        AND tp.numero_turno = turno
+        AND tp.numero_turno = tn.turno
         ORDER BY tp.tiempo_max, t.id_turno
   )
   SELECT
@@ -196,6 +196,86 @@ LANGUAGE plpgsql
   VOLATILE;
 
 
+
+
+
+
+
+
+
+
+
+
+WITH turn(autobus, turno, fecha) AS (
+  VALUES(6043, 1, '2019-05-15'::DATE )
+  )
+,data_marcada AS(
+  SELECT
+    t.id_turno
+    ,t.numero_turno
+    ,tp.nombre_marcada
+    ,t.hora_salida
+    ,tp.tiempo_max
+    ,tp.tiempo_marcada
+    ,tp.numero_caida
+    ,t.vehiculo
+    ,SUM(CASE
+          WHEN TRUE
+             AND tp.numero_caida >= r_rj.min_caida
+                THEN tp.numero_caida
+        ELSE 0 END)  OVER(
+              PARTITION BY tp.id_turno
+              ) AS total_caida
+
+    ,CASE
+        WHEN TRUE
+          AND tp.numero_caida >= r_rj.min_caida
+            THEN
+              (CASE
+                WHEN TRUE
+                  AND tp.numero_caida >= c_a.num_caida
+                    THEN tp.numero_caida * c_a.valor_consecutivo
+              ELSE 0 END)
+        WHEN TRUE
+          AND tp.numero_caida >= r_rj.min_caida
+            THEN tp.numero_caida * r_rj.valor_caida
+    END AS cancelar
+
+    FROM turn tn
+      INNER JOIN turnos t
+        ON tn.autobus = t.vehiculo
+        INNER JOIN rutas r
+        ON t.id_ruta = r.id_ruta
+      INNER JOIN ruta_relojes r_rj
+        ON t.id_ruta = r_rj.id_ruta
+      LEFT JOIN caidas_consecutivas c_a
+        ON c_a.id_ruta_reloj = r_rj.id_ruta_reloj
+      LEFT JOIN tiempos tp
+        ON tp.id_turno = t.id_turno
+      WHERE TRUE
+        AND tn.fecha::DATE = t.create_at::DATE
+        AND tp.numero_turno = tn.turno
+        ORDER BY tp.tiempo_max, t.id_turno
+  )
+  SELECT
+  d_m.id_turno
+  ,d_m.numero_turno
+  ,d_m.nombre_marcada
+  ,d_m.hora_salida
+  ,d_m.tiempo_max
+  ,d_m.tiempo_marcada
+  ,d_m.numero_caida
+  ,d_m.total_caida
+  ,d_m.cancelar
+  ,d_m.vehiculo
+  ,SUM(d_m.cancelar)OVER( PARTITION BY d_m.total_caida ) AS total_cancelar
+FROM data_marcada d_m;
+
+
+
+
+
+tp.numero_caida * r_rj.valor_caida
 
 
 

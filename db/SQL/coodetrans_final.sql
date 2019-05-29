@@ -66,7 +66,12 @@ CREATE OR REPLACE FUNCTION  add_tread( despacho INT, interno INT, planilla INT D
  */
 BEGIN
 INSERT INTO
-  rodamientos(numero_planilla, despacho_id, vehiculo_id, numero_interno)
+  rodamientos(
+    numero_planilla
+    ,despacho_id
+    ,vehiculo_id
+    ,numero_interno
+  )
     SELECT
       planilla
       ,despacho
@@ -78,7 +83,6 @@ INSERT INTO
       ORDER BY vehiculo_id DESC LIMIT 1;
 END;
 $$ LANGUAGE plpgsql VOLATILE;
-
 
 
 ---------------------------------tiempos de marcada--------------------------------------------
@@ -198,12 +202,12 @@ CREATE OR REPLACE FUNCTION trigg_shift_cost() RETURNS TRIGGER AS $costo_turno$
             SELECT
              NEW.id_turno
              ,CASE
-                WHEN r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
-
-                  (CASE WHEN t.positivo >= t_rt.num_positivo
-
-                    THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
-
+                 WHEN TRUE
+                    AND r_t.tarifa_positivo_id = t_rt.tarifa_positivo_id THEN
+                  (CASE
+                    WHEN TRUE
+                      AND t.positivo >= t_rt.num_positivo
+                        THEN (t.positivo * t_rt.valor_ruta) * t_rt.costo
                   ELSE 0 END ) END AS costo_positivo
 
              ,CASE
@@ -414,6 +418,13 @@ EXECUTE PROCEDURE update_at_modified();
 
 CREATE TRIGGER update_usuarios_modtime
 BEFORE UPDATE ON usuarios
+FOR EACH ROW
+WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
+EXECUTE PROCEDURE update_at_modified();
+
+
+CREATE TRIGGER update_caidas_consecutivas_modtime
+BEFORE UPDATE ON caidas_consecutivas
 FOR EACH ROW
 WHEN (OLD.update_at IS DISTINCT FROM NEW.update_at)
 EXECUTE PROCEDURE update_at_modified();
