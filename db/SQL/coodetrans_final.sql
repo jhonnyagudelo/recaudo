@@ -1,4 +1,4 @@
-/*1 - asociado del bus con su respectivo bus
+  /*1 - asociado del bus con su respectivo bus
   2 - estatus inicial {
     - disponible
     - rodamiento
