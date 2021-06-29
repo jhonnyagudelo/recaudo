@@ -1,9 +1,7 @@
 CREATE OR REPLACE FUNCTION fn_horas_laborales(TIMESTAMP, TIMESTAMP) RETURNS INTERVAL
     AS
         $$
-            /**
-            *   BRYAN CALERO
-            */
+
             WITH t (t_id, t_start, t_end) AS (
                 VALUES
                     (1,  $1, $2)
